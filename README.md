@@ -18,7 +18,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Run code on comment
+      - name: Run command automater
         uses: extremeheat/prismarine-repo-commands
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
