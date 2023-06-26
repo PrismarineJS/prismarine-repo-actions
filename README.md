@@ -1,8 +1,30 @@
 # prismarine-repo-commands
 
-Github Action for automating repo actions via issue/PR commands. Write permission to the repo required.
+Github Action for automating repo actions via issue/PR comment commands. To run the commands on a PR, the user must be the PR author or a repo COLLABORATOR, MEMBER, or OWNER.
 
-### Commands
+### Install
+```yaml
+name: Comment Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  comment-trigger:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Run code on comment
+        uses: extremeheat/prismarine-repo-commands
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Usage
 * /makerelease [release version] -- make a release PR
 <!-- * /fixlint -- run `standard --fix` on the current PR, then push the update to the PR -->
 
