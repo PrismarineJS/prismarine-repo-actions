@@ -56,15 +56,17 @@ async function close (id, reason) {
 }
 
 async function onRepoComment (fn) {
-  if (context.comment && context.issue) fn({ 
-    role: context.comment.author_association, 
-    body: context.comment.body,
-    type: context.issue.pull_request ? 'pull' : 'issue', 
-    isPullMerged: context.issue.pull_request?.merged,
-    author: context.issue.user.login,
-    triggerUser: context.comment.user.login,
-    isAuthor: context.issue.user.login === context.comment.user.login
-  }, context)
+  if (context.comment && context.issue) {
+    fn({
+      role: context.comment.author_association,
+      body: context.comment.body,
+      type: context.issue.pull_request ? 'pull' : 'issue',
+      isPullMerged: context.issue.pull_request?.merged,
+      author: context.issue.user.login,
+      triggerUser: context.comment.user.login,
+      isAuthor: context.issue.user.login === context.comment.user.login
+    }, context)
+  }
 }
 
 module.exports = { getIssueStatus, updateIssue, createIssue, close, onRepoComment, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }

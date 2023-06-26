@@ -9,7 +9,7 @@ const currentVersion = JSON.parse(currentManifestRaw).version
 const currentHistory = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
 
 const commands = {
-  makerelease(newVersion) {
+  makerelease (newVersion) {
     if (!newVersion) {
       const x = currentVersion.split('.')
       x[1]++
@@ -19,13 +19,12 @@ const commands = {
     const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
       .toString().split('\n').map(e => e.split('~~~'))
     console.log('Latest commits', latestCommits)
-    let md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
+    const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
     for (const [hash, user, message] of latestCommits) {
       if (message.startsWith('Release ')) break
       else md.push(`* [${message}](${repoURL}/commit/${hash}) (thanks @${user})`)
     }
-
 
     if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
       newHistoryLines.splice(1, 0, ...md)
@@ -42,7 +41,7 @@ const commands = {
   }
 }
 
-github.onRepoComment(({ body, role, isAuthor }) => {
+github.onRepoComment(({ body: message, role, isAuthor }) => {
   // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
   const ALLOWED_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
   if (message.startsWith('/') && (ALLOWED_ROLES.includes(role) || isAuthor)) {

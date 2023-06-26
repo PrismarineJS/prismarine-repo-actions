@@ -30,5 +30,11 @@
     "mocha": "^10.0.0",
     "prismarine-template": "file:.",
     "standard": "^17.0.0"
+  },
+  "standard": {
+    "ignore": [
+      "dist/",
+      "src/github.js"
+    ]
   }
 }
