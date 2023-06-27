@@ -1,0 +1,22 @@
+name: Comment Commands
+
+on:
+  issue_comment:
+    types: [created]
+  # Handle renamed PRs
+  pull_request:
+    types:
+      - edited
+
+jobs:
+  comment-trigger:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Run command automater
+        uses: extremeheat/prismarine-repo-commands
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
