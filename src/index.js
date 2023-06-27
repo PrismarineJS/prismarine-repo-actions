@@ -9,7 +9,7 @@ function findFile (tryPaths) {
 }
 
 // Go to default branch first in case we trigger on a PR branch
-exec('git checkout HEAD')
+exec('git checkout ' + cp.execSync('git symbolic-ref HEAD').toString().trim())
 const repoURL = github.repoURL
 const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
 const currentVersion = JSON.parse(currentManifestRaw).version
