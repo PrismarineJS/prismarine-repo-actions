@@ -1,4 +1,5 @@
 const noop = () => { }
+console.log('gh', Object.keys(globalThis).join(', '))
 if (!process.env.CI || globalThis.isMocha) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
