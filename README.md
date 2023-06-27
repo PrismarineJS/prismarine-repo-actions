@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run command automater
-        uses: extremeheat/prismarine-repo-commands
+        uses: extremeheat/prismarine-repo-commands@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
