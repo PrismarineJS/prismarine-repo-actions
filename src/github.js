@@ -14,8 +14,10 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
 
 // const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
 const github = require('@actions/github')
+const core = require('@actions/core');
 
-const token = process.env.GITHUB_TOKEN
+const token = process.env.GITHUB_TOKEN || core.getInput('token')
+if (!token) throw new Error('No Github API token was specified, please see the documentation for correct Action usage.')
 const octokit = github.getOctokit(token)
 const context = github.context
 
