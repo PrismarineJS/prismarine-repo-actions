@@ -62,7 +62,7 @@ async function comment (id, body) {
 }
 
 async function getDefaultBranch () {
-  const { data } = await octokit.repos.get({ ...context.repo })
+  const { data } = await octokit.rest.repos.get({ ...context.repo })
   return data.default_branch
 }
 
