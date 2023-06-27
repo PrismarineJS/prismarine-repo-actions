@@ -10020,7 +10020,7 @@ const commands = {
       github.updatePull(existingPR, { title })
     } else {
       const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}>this comment</a>".\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
-      github.createPullRequest(title, body)
+      github.createPullRequest(title, body, branchName)
     }
     return true
   }
