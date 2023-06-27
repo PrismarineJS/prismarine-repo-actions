@@ -7889,7 +7889,7 @@ function wrappy (fn, cb) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const noop = () => { }
-if (!process.env.CI || global.it /* mocha */) {
+if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
   process.env.GITHUB_EVENT_NAME = 'issue_comment'
@@ -7898,7 +7898,7 @@ if (!process.env.CI || global.it /* mocha */) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { mock: true, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -8199,7 +8199,7 @@ const cp = __nccwpck_require__(2081)
 const fs = __nccwpck_require__(7147)
 const github = __nccwpck_require__(8396)
 
-const exec = (cmd) => process.env.CI ? (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' })) : console.log('> ', cmd)
+const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
 function findFile (tryPaths) {
   const path = tryPaths.find(path => fs.existsSync(path))
   return [path, fs.readFileSync(path, 'utf-8')]
@@ -8264,6 +8264,8 @@ const commands = {
     exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
     exec(`git checkout -b ${branchName}`)
     exec('git add --all')
+    exec('git config user.name "github-actions[bot]"')
+    exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
     exec(`git commit -m "Release ${branchName}"`)
     exec(`git push origin ${branchName} --force`)
     const title = `Release ${newVersion}`
