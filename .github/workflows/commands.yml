@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v2
+      run: actions/checkout@v2
       with:
+        ref: HEAD
         fetch-depth: 16
     - name: Run command handlers
       uses: extremeheat/prismarine-repo-actions@master
