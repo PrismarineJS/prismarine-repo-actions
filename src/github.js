@@ -1,5 +1,5 @@
 const noop = () => { }
-if (!process.env.CI) {
+if (!process.env.CI || global.it /* mocha */) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
   process.env.GITHUB_EVENT_NAME = 'issue_comment'
