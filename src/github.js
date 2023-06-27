@@ -72,7 +72,7 @@ async function getPullStatus (titleIncludes, author = 'app/github-actions') {
   const existingPulls = await octokit.rest.search.issuesAndPullRequests({
     q
   })
-  console.log('Existing issue for query [', q, '] are', existingIssues)
+  console.log('Existing issue for query [', q, '] are', existingPulls)
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
   if (!existingPull) return {}
