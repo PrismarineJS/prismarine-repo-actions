@@ -21,9 +21,9 @@
   "author": "Romain Beaumont",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/PrismarineJS/prismarine-template/issues"
+    "url": "https://github.com/extremeheat/prismarine-repo-actions/issues"
   },
-  "homepage": "https://github.com/PrismarineJS/prismarine-template#readme",
+  "homepage": "https://github.com/extremeheat/prismarine-repo-actions#readme",
   "devDependencies": {
     "@actions/github": "^5.1.1",
     "@vercel/ncc": "^0.36.1",
