@@ -69,7 +69,7 @@ const commands = {
     exec('git add --all')
     exec('git config user.name "github-actions[bot]"')
     exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
-    exec(`git commit -m "Release ${branchName}"`)
+    exec(`git commit -m "Release ${newVersion}"`)
     exec(`git push origin ${branchName} --force`)
     const title = `Release ${newVersion}`
     if (existingPR) {
