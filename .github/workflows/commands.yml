@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      run: git clone https://github.com/extremeheat/prismarine-repo-actions
+      run: git clone https://github.com/extremeheat/prismarine-repo-actions .
     - name: Run command handlers
       uses: extremeheat/prismarine-repo-actions@master
       with:
