@@ -9634,8 +9634,6 @@ const github = __nccwpck_require__(5438)
 const core = __nccwpck_require__(2186)
 const context = github.context
 
-console.log('CONTEXT', context)
-
 const token = process.env.GITHUB_TOKEN || core.getInput('token')
 if (!token) throw new Error('No Github token was specified, please see the documentation for correct Action usage.')
 const octokit = github.getOctokit(token)
@@ -9752,7 +9750,7 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onRepoPRUpdate: onUpdatedPR, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+module.exports = { getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
 
 
 /***/ }),
