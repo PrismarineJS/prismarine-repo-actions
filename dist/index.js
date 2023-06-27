@@ -7904,12 +7904,13 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
 
 // const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
 const github = __nccwpck_require__(5438)
-const core = __nccwpck_require__(7396);
-
-const token = process.env.GITHUB_TOKEN || core.getInput('token')
-if (!token) throw new Error('No Github API token was specified, please see the documentation for correct Action usage.')
-const octokit = github.getOctokit(token)
 const context = github.context
+
+console.log('CONTEXT', context)
+
+const token = process.env.GITHUB_TOKEN
+if (!token) throw new Error('No Github token was specified, please see the documentation for correct Action usage.')
+const octokit = github.getOctokit(token)
 
 async function getIssueStatus (title) {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
@@ -8024,14 +8025,6 @@ function onUpdatedPR (fn) {
 }
 
 module.exports = { getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onRepoPRUpdate: onUpdatedPR, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
-
-
-/***/ }),
-
-/***/ 7396:
-/***/ ((module) => {
-
-module.exports = eval("require")("@actions/core");
 
 
 /***/ }),
