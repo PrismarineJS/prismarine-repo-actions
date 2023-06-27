@@ -7889,7 +7889,7 @@ function wrappy (fn, cb) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const noop = () => { }
-if (!process.env.CI) {
+if (!process.env.CI || global.it /* mocha */) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
   process.env.GITHUB_EVENT_NAME = 'issue_comment'
@@ -8261,7 +8261,7 @@ const commands = {
     // In the future, instead of hex we can use a template function with escaping.
     // !!!
     const branchName = 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
-    exec(`git branch -D ${branchName}`)
+    exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
     exec(`git checkout -b ${branchName}`)
     exec('git add --all')
     exec(`git commit -m "Release ${branchName}"`)

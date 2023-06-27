@@ -64,7 +64,7 @@ const commands = {
     // In the future, instead of hex we can use a template function with escaping.
     // !!!
     const branchName = 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
-    exec(`git branch -D ${branchName}`)
+    exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
     exec(`git checkout -b ${branchName}`)
     exec('git add --all')
     exec(`git commit -m "Release ${branchName}"`)
