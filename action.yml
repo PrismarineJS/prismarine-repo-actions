@@ -1,5 +1,9 @@
 name: Repo Issue Commands
 description: Github Action for automating repo actions via issue/PR commands. Write permission to the repo required.
+inputs:
+  token:  
+    description: 'Github API token, secrets.GITHUB_TOKEN.'
+    required: true
 runs:
   using: node16
   main: dist/index.js
