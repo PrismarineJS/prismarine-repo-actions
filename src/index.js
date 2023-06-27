@@ -59,11 +59,8 @@ const commands = {
       if (pr) existingPR = pr.number
     }
 
-    // !!!
-    // We need to encode/escape here to prevent code injection.
-    // In the future, instead of hex we can use a template function with escaping.
-    // !!!
-    const branchName = 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
+    // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
+    const branchName = 'rel-actions-bot' // 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
     exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
     exec(`git checkout -b ${branchName}`)
     exec('git add --all')

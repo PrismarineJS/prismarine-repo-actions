@@ -9683,13 +9683,13 @@ async function getDefaultBranch () {
   return data.default_branch
 }
 
-async function getPullStatus (titleIncludes, author = 'app/github-actions') {
+async function getPullStatus (titleIncludes, author = 'app/github-actions', status = 'open') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
-  const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '')
+  const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}`: '')
   const existingPulls = await octokit.rest.search.issuesAndPullRequests({
     q
   })
-  console.log('Existing issue for query [', q, '] are', existingPulls)
+  console.log('Existing issue for query [', q, '] are', existingPulls.data.items)
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
   if (!existingPull) return {}
@@ -10004,11 +10004,9 @@ const commands = {
       if (pr) existingPR = pr.number
     }
 
-    // !!!
-    // We need to encode/escape here to prevent code injection.
-    // In the future, instead of hex we can use a template function with escaping.
-    // !!!
-    const branchName = 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
+
+    // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
+    const branchName = 'rel-actions-bot' // 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
     exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
     exec(`git checkout -b ${branchName}`)
     exec('git add --all')
