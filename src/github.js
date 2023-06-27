@@ -10,8 +10,11 @@ if (!process.env.CI || globalThis.isMocha) {
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
   module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  console.log('r1')
   return
+  console.log('r2')
 }
+console.log('r3')
 
 // const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
 const github = require('@actions/github')
