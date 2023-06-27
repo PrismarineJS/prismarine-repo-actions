@@ -103,32 +103,34 @@ async function createPullRequest (title, body, fromBranch, intoBranch) {
 }
 
 function onRepoComment (fn) {
-  if (context.comment && context.issue) {
+  const payload = context.payload
+  if (payload.comment && payload.issue) {
     fn({
-      role: context.comment.author_association,
-      body: context.comment.body,
-      type: context.issue.pull_request ? 'pull' : 'issue',
-      triggerPullMerged: context.issue.pull_request?.merged,
-      issueAuthor: context.issue.user.login,
-      triggerUser: context.comment.user.login,
-      triggerURL: context.comment.url,
-      isAuthor: context.issue.user.login === context.comment.user.login
-    }, context)
+      role: payload.comment.author_association,
+      body: payload.comment.body,
+      type: payload.issue.pull_request ? 'pull' : 'issue',
+      triggerPullMerged: payload.issue.pull_request?.merged,
+      issueAuthor: payload.issue.user.login,
+      triggerUser: payload.comment.user.login,
+      triggerURL: payload.comment.url,
+      isAuthor: payload.issue.user.login === payload.comment.user.login
+    }, payload)
   }
 }
 
 function onUpdatedPR (fn) {
-  if (context.action === 'edited' && context.pull_request && context.changes) {
+  const payload = context.payload
+  if (payload.action === 'edited' && payload.pull_request && payload.changes) {
     fn({
-      id: context.pull_request.number,
-      changeType: context.changes.title ? 'title' : context.changes.body ? 'body' : 'unknown',
+      id: payload.pull_request.number,
+      changeType: payload.changes.title ? 'title' : payload.changes.body ? 'body' : 'unknown',
       title: {
-        old: context.changes.title ? context.changes.title.from : undefined,
-        now: context.pull_request.title
+        old: payload.changes.title ? payload.changes.title.from : undefined,
+        now: payload.pull_request.title
       },
       // check if created by Github Actions
-      createdByUs: context.pull_request.user.login.includes('github-actions'),
-      isOpen: context.pull_request.state === 'open'
+      createdByUs: payload.pull_request.user.login.includes('github-actions'),
+      isOpen: payload.pull_request.state === 'open'
     })
   }
 }
