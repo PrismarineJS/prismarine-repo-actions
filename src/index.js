@@ -2,7 +2,7 @@ const cp = require('child_process')
 const fs = require('fs')
 const github = require('./github')
 
-const exec = (cmd) => process.env.CI ? (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' })) : console.log('> ', cmd)
+const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
 function findFile (tryPaths) {
   const path = tryPaths.find(path => fs.existsSync(path))
   return [path, fs.readFileSync(path, 'utf-8')]

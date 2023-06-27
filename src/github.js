@@ -1,6 +1,5 @@
 const noop = () => { }
-console.log('gh', Object.keys(globalThis).join(', '))
-if (!process.env.CI || globalThis.isMocha) {
+if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
   process.env.GITHUB_EVENT_NAME = 'issue_comment'
@@ -9,12 +8,9 @@ if (!process.env.CI || globalThis.isMocha) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
-  console.log('r1')
+  module.exports = { mock: true, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
-  console.log('r2')
 }
-console.log('r3')
 
 // const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
 const github = require('@actions/github')
