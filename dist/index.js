@@ -9710,7 +9710,7 @@ async function createPullRequest (title, body, fromBranch, intoBranch) {
   if (!intoBranch) {
     intoBranch = await getDefaultBranch()
   }
-  await octokit.pulls.create({
+  await octokit.rest.pulls.create({
     ...context.repo,
     title,
     body,
