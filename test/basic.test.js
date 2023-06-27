@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 const cp = require('child_process')
 const fs = require('fs')
+globalThis.isMocha = true
 
 describe('commands work', () => {
   const github = require('../src/github')
