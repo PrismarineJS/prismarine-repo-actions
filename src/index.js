@@ -8,6 +8,8 @@ function findFile (tryPaths) {
   return [path, fs.readFileSync(path, 'utf-8')]
 }
 
+// Go to default branch first in case we trigger on a PR branch
+exec('git checkout refs/remotes/origin/HEAD')
 const repoURL = github.repoURL
 const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
 const currentVersion = JSON.parse(currentManifestRaw).version

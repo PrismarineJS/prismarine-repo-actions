@@ -9730,7 +9730,7 @@ function onRepoComment (fn) {
       triggerPullMerged: payload.issue.pull_request?.merged,
       issueAuthor: payload.issue.user.login,
       triggerUser: payload.comment.user.login,
-      triggerURL: payload.comment.url,
+      triggerURL: payload.comment.html_url,
       isAuthor: payload.issue.user.login === payload.comment.user.login
     }, payload)
   }
@@ -9953,6 +9953,8 @@ function findFile (tryPaths) {
   return [path, fs.readFileSync(path, 'utf-8')]
 }
 
+// Go to default branch first in case we trigger on a PR branch
+exec('git checkout refs/remotes/origin/HEAD')
 const repoURL = github.repoURL
 const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
 const currentVersion = JSON.parse(currentManifestRaw).version
@@ -10003,7 +10005,6 @@ const commands = {
       const pr = await github.getPullStatus('Release ')
       if (pr) existingPR = pr.number
     }
-
 
     // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
     const branchName = 'rel-actions-bot' // 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')

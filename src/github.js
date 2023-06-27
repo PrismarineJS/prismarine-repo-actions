@@ -113,7 +113,7 @@ function onRepoComment (fn) {
       triggerPullMerged: payload.issue.pull_request?.merged,
       issueAuthor: payload.issue.user.login,
       triggerUser: payload.comment.user.login,
-      triggerURL: payload.comment.url,
+      triggerURL: payload.comment.html_url,
       isAuthor: payload.issue.user.login === payload.comment.user.login
     }, payload)
   }
