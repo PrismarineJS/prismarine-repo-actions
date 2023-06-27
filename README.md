@@ -9,6 +9,10 @@ name: Comment Commands
 on:
   issue_comment:
     types: [created]
+  # Handle renamed PRs
+  pull_request:
+    types:
+      - edited
 
 jobs:
   comment-trigger:
