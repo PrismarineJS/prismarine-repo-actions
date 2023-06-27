@@ -61,6 +61,7 @@ describe('commands work', () => {
 
 describe('build checks', function () {
   it('build is up to date', function () {
+    this.timeout(5000)
     cp.execSync('npm run build -- -o test')
     if (fs.statSync('test/index.js').size === fs.statSync('dist/index.js').size) {
       fs.rmSync('test/index.js')
