@@ -1,4 +1,6 @@
 /* eslint-env mocha */
+const cp = require('child_process')
+const fs = require('fs')
 
 describe('commands work', () => {
   const github = require('../src/github')
@@ -54,4 +56,16 @@ describe('commands work', () => {
     if (shouldBeFalse) throw Error('failed')
     done()
   }).timeout(1000)
+})
+
+describe('build checks', function () {
+  it('build is up to date', function () {
+    cp.execSync('npm run build -- -o test')
+    if (fs.statSync('test/index.js').size === fs.statSync('dist/index.js').size) {
+      fs.rmSync('test/index.js')
+    } else {
+      fs.rmSync('test/index.js')
+      throw Error('dist/ is out of sync, run `npm run build`')
+    }
+  })
 })

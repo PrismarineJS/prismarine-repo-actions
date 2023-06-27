@@ -7888,7 +7888,7 @@ function wrappy (fn, cb) {
 /***/ 8396:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const noop = () => {}
+const noop = () => { }
 if (!process.env.CI) {
   // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
   process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
@@ -7898,7 +7898,7 @@ if (!process.env.CI) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, onRepoComment: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -7945,85 +7945,84 @@ async function close (id, reason) {
   console.log(`Closed issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
 }
 
-async function onRepoComment (fn) {
-  if (context.comment && context.issue) fn({ 
-    role: context.comment.author_association, 
-    body: context.comment.body,
-    type: context.issue.pull_request ? 'pull' : 'issue', 
-    isPullMerged: context.issue.pull_request?.merged,
-    author: context.issue.user.login,
-    triggerUser: context.comment.user.login,
-    isAuthor: context.issue.user.login === context.comment.user.login
-  }, context)
+async function comment (id, body) {
+  await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body })
 }
 
-module.exports = { getIssueStatus, updateIssue, createIssue, close, onRepoComment, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+async function getDefaultBranch () {
+  const { data } = await octokit.repos.get({ ...context.repo })
+  return data.default_branch
+}
 
-/***/ }),
+async function getPullStatus (titleIncludes, author = 'app/github-actions') {
+  // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
+  const existingPulls = await octokit.rest.search.issuesAndPullRequests({
+    q: `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '')
+  })
+  // console.log('Existing issues', existingIssues)
+  const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
-/***/ 4351:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+  if (!existingPull) return {}
 
-/* module decorator */ module = __nccwpck_require__.nmd(module);
-const cp = __nccwpck_require__(2081)
-const fs = __nccwpck_require__(7147)
-const github = __nccwpck_require__(8396)
+  return { open: existingPull.state === 'open', closed: existingPull.state === 'closed', id: existingPull.number }
+}
 
-const findFile = (tryPaths) => fs.readFileSync(tryPaths.find(path => fs.existsSync(path)), 'utf-8')
-const repoURL = github.repoURL
-const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-const currentVersion = JSON.parse(currentManifestRaw).version
-const currentHistory = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+async function updatePull (id, { title, body }) {
+  const pull = await octokit.rest.pulls.update({
+    ...context.repo,
+    pull_number: id,
+    title,
+    body
+  })
+  console.log(`Updated pull ${pull.data.title}#${pull.data.number}: ${pull.data.html_url}`)
+}
 
-const commands = {
-  makerelease(newVersion) {
-    if (!newVersion) {
-      const x = currentVersion.split('.')
-      x[1]++
-      newVersion = x.join('.')
-    }
-    const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
-      .toString().split('\n').map(e => e.split('~~~'))
-    console.log('Latest commits', latestCommits)
-    let md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
+async function createPullRequest (title, body, fromBranch, intoBranch) {
+  if (!intoBranch) {
+    intoBranch = await getDefaultBranch()
+  }
+  await octokit.pulls.create({
+    ...context.repo,
+    title,
+    body,
+    head: fromBranch,
+    base: intoBranch
+  })
+}
 
-    for (const [hash, user, message] of latestCommits) {
-      if (message.startsWith('Release ')) break
-      else md.push(`* [${message}](${repoURL}/commit/${hash}) (thanks @${user})`)
-    }
-
-
-    if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
-      newHistoryLines.splice(1, 0, ...md)
-    } else {
-      newHistoryLines.unshift(...md)
-    }
-
-    console.log('Writing markdown:')
-    console.log(newHistoryLines.join('\n').replace(/\n\n\n/g, '\n\n'))
-
-    const newManifest = currentManifestRaw.replace(`"version": "${currentVersion}"`, `"version": "${newVersion}"`)
-    fs.writeFileSync('package.json', newManifest)
-    console.log('Updated package.json from', currentVersion, 'to', newVersion)
+function onRepoComment (fn) {
+  if (context.comment && context.issue) {
+    fn({
+      role: context.comment.author_association,
+      body: context.comment.body,
+      type: context.issue.pull_request ? 'pull' : 'issue',
+      triggerPullMerged: context.issue.pull_request?.merged,
+      issueAuthor: context.issue.user.login,
+      triggerUser: context.comment.user.login,
+      triggerURL: context.comment.url,
+      isAuthor: context.issue.user.login === context.comment.user.login
+    }, context)
   }
 }
 
-github.onRepoComment(({ body, role, isAuthor }) => {
-  // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
-  const ALLOWED_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
-  if (message.startsWith('/') && (ALLOWED_ROLES.includes(role) || isAuthor)) {
-    const [command, ...args] = message.slice(1).split(' ')
-    const handler = commands[command]
-    if (handler) {
-      handler(...args)
-    }
+function onUpdatedPR (fn) {
+  if (context.action === 'edited' && context.pull_request && context.changes) {
+    fn({
+      id: context.pull_request.number,
+      changeType: context.changes.title ? 'title' : context.changes.body ? 'body' : 'unknown',
+      title: {
+        old: context.changes.title ? context.changes.title.from : undefined,
+        now: context.pull_request.title
+      },
+      // check if created by Github Actions
+      createdByUs: context.pull_request.user.login.includes('github-actions'),
+      isOpen: context.pull_request.state === 'open'
+    })
   }
-})
-
-if (!module.parent) {
-  commands.makerelease()
 }
+
+module.exports = { getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onRepoPRUpdate: onUpdatedPR, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+
 
 /***/ }),
 
@@ -8169,8 +8168,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -8183,34 +8182,123 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.nmd = (module) => {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			return module;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(4351);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+const cp = __nccwpck_require__(2081)
+const fs = __nccwpck_require__(7147)
+const github = __nccwpck_require__(8396)
+
+const exec = (cmd) => process.env.CI ? (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' })) : console.log('> ', cmd)
+function findFile (tryPaths) {
+  const path = tryPaths.find(path => fs.existsSync(path))
+  return [path, fs.readFileSync(path, 'utf-8')]
+}
+
+const repoURL = github.repoURL
+const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+const currentVersion = JSON.parse(currentManifestRaw).version
+const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+
+const commands = {
+  async makerelease (newVersion) {
+    // Make sure we were triggered in a PR. If there was a triggering PR
+    if (this.type !== 'pr' && this.type !== 'pull') return
+    if (!newVersion) {
+      const x = currentVersion.split('.')
+      x[1]++
+      newVersion = x.join('.')
+    }
+    const newHistoryLines = currentHistory.split('\n')
+    const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
+      .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
+    console.log('Latest commits', latestCommits.map(e => e.join(', ')))
+    if (!latestCommits.length) {
+      github.comment("Sorry, I couldn't find any commits since the last release.")
+      return
+    }
+    const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
+
+    for (const [hash, user, message] of latestCommits) {
+      if (message.startsWith('Release ')) break
+      else md.push(`* [${message}](${repoURL}/commit/${hash}) (thanks @${user})`)
+    }
+
+    if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
+      newHistoryLines.splice(1, 0, ...md)
+    } else {
+      newHistoryLines.unshift(...md)
+    }
+
+    console.log('Writing HISTORY.md in', historyPath)
+    const genHis = newHistoryLines.join('\n').replace(/\n\n\n/g, '\n\n')
+    // console.log(genHis)
+    fs.writeFileSync(historyPath, genHis)
+
+    const newManifest = currentManifestRaw.replace(`"version": "${currentVersion}"`, `"version": "${newVersion}"`)
+    fs.writeFileSync('package.json', newManifest)
+    console.log('Updated package.json from', currentVersion, 'to', newVersion)
+
+    // See if we already have an open issue, if so, update it
+    let existingPR = this.existingPR
+    if (!existingPR) {
+      const pr = await github.getPullStatus('Release ')
+      if (pr) existingPR = pr.number
+    }
+
+    // !!!
+    // We need to encode/escape here to prevent code injection.
+    // In the future, instead of hex we can use a template function with escaping.
+    // !!!
+    const branchName = 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
+    exec(`git branch -D ${branchName}`)
+    exec(`git checkout -b ${branchName}`)
+    exec('git add --all')
+    exec(`git commit -m "Release ${branchName}"`)
+    exec(`git push origin ${branchName} --force`)
+    const title = `Release ${newVersion}`
+    if (existingPR) {
+      github.updatePull(existingPR, { title })
+    } else {
+      const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}>this comment</a>".\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
+      github.createPullRequest(title, body)
+    }
+    return true
+  }
+}
+
+// Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
+const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
+
+github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL }) => {
+  console.log('CB Called!', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
+  if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
+    const [command, ...args] = message.slice(1).split(' ')
+    const handler = commands[command]
+    if (handler) {
+      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL }, args)
+    }
+  }
+})
+
+github.onUpdatedPR(({ changeType, id, isOpen, createdByUs, title }, context) => {
+  if (changeType === 'title' && isOpen && createdByUs && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
+    commands.makerelease.call({ type: 'pull', exitingPR: id }, title.now.replace('Release ', ''))
+  }
+})
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;

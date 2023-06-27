@@ -33,7 +33,8 @@
   },
   "standard": {
     "ignore": [
-      "dist/"
+      "dist/",
+      "src/github.js"
     ]
   }
 }

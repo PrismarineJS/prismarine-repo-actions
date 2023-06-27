@@ -9,7 +9,7 @@ if (!process.env.CI) {
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
   module.exports = { getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
-  eval('return') // eslint-disable-line -- standardjs crashes without eval here!
+  return
 }
 
 // const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
