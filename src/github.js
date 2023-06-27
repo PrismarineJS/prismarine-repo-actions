@@ -68,10 +68,11 @@ async function getDefaultBranch () {
 
 async function getPullStatus (titleIncludes, author = 'app/github-actions') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
+  const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '')
   const existingPulls = await octokit.rest.search.issuesAndPullRequests({
-    q: `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '')
+    q
   })
-  // console.log('Existing issues', existingIssues)
+  console.log('Existing issue for query [', q, '] are', existingIssues)
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
   if (!existingPull) return {}

@@ -73,9 +73,10 @@ const commands = {
     exec(`git push origin ${branchName} --force`)
     const title = `Release ${newVersion}`
     if (existingPR) {
+      console.log('Existing PR # is', existingPR)
       github.updatePull(existingPR, { title })
     } else {
-      const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}>this comment</a>".\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
+      const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
       github.createPullRequest(title, body, branchName)
     }
     return true
@@ -86,7 +87,7 @@ const commands = {
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
 github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL }) => {
-  console.log('CB Called!', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
+  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command]
@@ -98,6 +99,6 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
 
 github.onUpdatedPR(({ changeType, id, isOpen, createdByUs, title }, context) => {
   if (changeType === 'title' && isOpen && createdByUs && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
-    commands.makerelease.call({ type: 'pull', exitingPR: id }, title.now.replace('Release ', ''))
+    commands.makerelease.call({ type: 'pull', existingPR: id }, title.now.replace('Release ', ''))
   }
 })
