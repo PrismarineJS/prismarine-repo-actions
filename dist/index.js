@@ -9967,21 +9967,59 @@ function findFile (tryPaths) {
 
 const commands = {
   async makerelease (newVersion) {
-    // Make sure we were triggered in a PR. If there was a triggering PR
+    // Make sure we were triggered in a PR.
     if (this.type !== 'pr' && this.type !== 'pull') return
 
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
     exec(`git checkout ${defaultBranch}`)
-    const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-    const currentVersion = JSON.parse(currentManifestRaw).version
+
     const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+
+    let currentVersion
+    // Node.js
+    if (fs.existsSync('./package.json')) {
+      const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+      currentVersion = JSON.parse(currentManifestRaw).version
+    }
+    // Python (setup.py)
+    if (fs.existsSync('setup.py')) {
+      const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
+      currentVersion = currentManifestRaw.match(/version="(.*)"/)[1]
+    }
+    // Python (pyproject.toml)
+    if (fs.existsSync('pyproject.toml')) {
+      const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
+      currentVersion = currentManifestRaw.match(/version = "(.*)"/)[1]
+    }
+    if (!currentVersion) {
+      // Get the latest version from HISTORY.md
+      const historyLines = currentHistory.split('\n')
+      for (const line of historyLines) {
+        if (line.startsWith('#')) {
+          const header = line.split('# ')[1]?.trim()
+          if (!header) continue
+          if (header[0] === 'v' && header[1].isNumeric()) {
+            currentVersion = header.slice(1)
+            break
+          } else if (header[0].isNumeric()) {
+            currentVersion = header
+            break
+          }
+        }
+      }
+      if (!currentVersion) {
+        await github.comment("Sorry, I couldn't find the current version.")
+        return
+      }
+    }
 
     if (!newVersion) {
       const x = currentVersion.split('.')
       x[1]++
       newVersion = x.join('.')
     }
+
     const newHistoryLines = currentHistory.split('\n')
     const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
       .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
@@ -10008,9 +10046,27 @@ const commands = {
     // console.log(genHis)
     fs.writeFileSync(historyPath, genHis)
 
-    const newManifest = currentManifestRaw.replace(`"version": "${currentVersion}"`, `"version": "${newVersion}"`)
-    fs.writeFileSync('package.json', newManifest)
-    console.log('Updated package.json from', currentVersion, 'to', newVersion)
+    // Node.js
+    if (fs.existsSync('./package.json')) {
+      const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+      const newManifest = currentManifestRaw.replace(`"version": "${currentVersion}"`, `"version": "${newVersion}"`)
+      fs.writeFileSync('package.json', newManifest)
+      console.log('Updated package.json from', currentVersion, 'to', newVersion)
+    }
+    // Python (setup.py)
+    if (fs.existsSync('setup.py')) {
+      const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
+      const newManifest = currentManifestRaw.replace(`version="${currentVersion}"`, `version="${newVersion}"`)
+      fs.writeFileSync('setup.py', newManifest)
+      console.log('Updated setup.py from', currentVersion, 'to', newVersion)
+    }
+    // Python (pyproject.toml)
+    if (fs.existsSync('pyproject.toml')) {
+      const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
+      const newManifest = currentManifestRaw.replace(`version = "${currentVersion}"`, `version = "${newVersion}"`)
+      fs.writeFileSync('pyproject.toml', newManifest)
+      console.log('Updated pyproject.toml from', currentVersion, 'to', newVersion)
+    }
 
     // See if we already have an open issue, if so, update it
     let existingPR = this.existingPR
