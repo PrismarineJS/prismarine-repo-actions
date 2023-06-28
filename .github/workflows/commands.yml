@@ -12,8 +12,8 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v3
-    - uses: hmarr/debug-action@v2
+#     - uses: hmarr/debug-action@v2
     - name: Run command handlers
       uses: extremeheat/prismarine-repo-actions@master
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT_TOKEN }}
