@@ -52,7 +52,7 @@ const commands = {
         }
       }
       if (!currentVersion) {
-        await github.comment("Sorry, I couldn't find the current version.")
+        await github.comment(this.triggerIssueId, "Sorry, I couldn't find the current version.")
         return
       }
     }
@@ -68,7 +68,7 @@ const commands = {
       .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
     console.log('Latest commits', latestCommits.map(e => e.join(', ')))
     if (!latestCommits.length) {
-      await github.comment("Sorry, I couldn't find any commits since the last release.")
+      await github.comment(this.triggerIssueId, "Sorry, I couldn't find any commits since the last release.")
       return
     }
     const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
@@ -142,7 +142,7 @@ const commands = {
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerCommentId }) => {
+github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }) => {
   console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
@@ -150,7 +150,7 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
     if (handler) {
       // add a eyes emoji to the triggering comment
       github.addCommentReaction(triggerCommentId, 'eyes')
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerCommentId }, args)
+      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
     }
   }
 })

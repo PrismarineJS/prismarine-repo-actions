@@ -125,6 +125,7 @@ function onRepoComment (fn) {
       issueAuthor: payload.issue.user.login,
       triggerUser: payload.comment.user.login,
       triggerURL: payload.comment.html_url,
+      triggerIssueId: payload.issue.number,
       triggerCommentId: payload.comment.id,
       isAuthor: payload.issue.user.login === payload.comment.user.login
     }, payload)
