@@ -64,7 +64,7 @@ async function comment (id, body) {
 function getDefaultBranch () {
   // const { data } = await octokit.rest.repos.get({ ...context.repo })
   // return data.default_branch
-  return context.repository.default_branch
+  return context.payload.repository.default_branch
 }
 
 console.log('Default branch is', getDefaultBranch())
@@ -139,4 +139,4 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: context.repository.html_url }
+module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
