@@ -8,7 +8,8 @@
     "test": "mocha --reporter spec --exit",
     "pretest": "npm run lint",
     "lint": "standard",
-    "fix": "standard --fix"
+    "fix": "standard --fix",
+    "ci": "npm run fix && npm run build && npm test"
   },
   "repository": {
     "type": "git",
@@ -18,19 +19,20 @@
     "prismarine",
     "template"
   ],
-  "author": "Romain Beaumont",
+  "author": "extremeheat",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/PrismarineJS/prismarine-template/issues"
   },
   "homepage": "https://github.com/PrismarineJS/prismarine-template#readme",
   "devDependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1",
     "@vercel/ncc": "^0.36.1",
     "mocha": "^10.0.0",
-    "prismarine-template": "file:.",
     "standard": "^17.0.0"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1"
   },
   "standard": {
     "ignore": [
