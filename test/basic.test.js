@@ -69,7 +69,7 @@ describe('build checks', function () {
       fs.rmSync('test/index.js')
     } else {
       fs.rmSync('test/index.js')
-      console.log('expected, actual build', a, b)
+      console.log('expected, actual build', a.length, b.length)
       throw Error('dist/ is out of sync, run `npm run build`')
     }
   })

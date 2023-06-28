@@ -32,9 +32,6 @@ const commands = {
     if (!latestCommits.length) {
       await github.comment("Sorry, I couldn't find any commits since the last release.")
       return
-    } else if (this.triggerCommentId) {
-      // add a thumbs up emoji to the triggering comment
-      github.reactToComment(this.triggerCommentId, 'thumbsup')
     }
     const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
@@ -95,6 +92,8 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
     if (handler) {
+      // add a eyes emoji to the triggering comment
+      github.addCommentReaction(triggerCommentId, 'eyes')
       return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerCommentId }, args)
     }
   }
