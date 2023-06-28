@@ -9959,7 +9959,7 @@ function findFile (tryPaths) {
 const commands = {
   async makerelease (newVersion) {
     const defaultBranch = await github.getDefaultBranch()
-    exec(`git fetch ${defaultBranch} --depth 16`)
+    exec(`git fetch origin ${defaultBranch} --depth 16`)
     exec(`git checkout ${defaultBranch}`)
     const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
     const currentVersion = JSON.parse(currentManifestRaw).version
