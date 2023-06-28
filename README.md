@@ -29,6 +29,8 @@ jobs:
       uses: extremeheat/prismarine-repo-actions@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        # this sets the command to use for installing the repo, if needed for the command
+        install-command: npm install
         # To disable the makerelease command, uncomment the following line
         # /makerelease.enabled: false
         # To disable the fixlint command, uncomment the following line

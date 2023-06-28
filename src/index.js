@@ -139,7 +139,9 @@ const commands = {
   },
   async fixlint () {
     if (this.type !== 'pr' && this.type !== 'pull') return
+    const installCommand = github.getInput('install-command') || 'npm install'
     const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
+    exec(installCommand)
     function push () {
       exec('git add --all')
       exec('git config user.name "github-actions[bot]"')
@@ -160,10 +162,10 @@ const commands = {
         if (error) { // Non-zero exit code
           try {
             push()
-            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
+            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
             globalThis.__testingLintError = true // test marker
           } catch (e2) {
-            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
+            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
           }
         } else {
           try {
