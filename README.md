@@ -29,7 +29,15 @@ jobs:
       uses: extremeheat/prismarine-repo-actions@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        # To disable the makerelease command, uncomment the following line
+        # /makerelease.enabled: false
+        # To disable the fixlint command, uncomment the following line
+        # /fixlint.enabled: false
+        # this sets the command to use for the /fixlint command
+        /fixlint.fix-command: npm run fix
 ```
+
+Commands can be enabled/disabled by setting the `/$command.enabled` property to `true` or `false`.
 
 ## Commands
 * /makerelease [release version]
@@ -37,5 +45,5 @@ jobs:
   * This command creates a new PR with a modified HISTORY.md adding a section with the latest commits since the last release PR (commit starting with "Release ") and if they exist, updates the package.json (Node.js) or setup.py/pyproject.toml (Python) manifest files.
   * *This doesn't actually create a release, it just creates a PR that when merged, will trigger your actual release workflow.*
   * [Example trigger](https://github.com/extremeheat/prismarine-repo-actions/pull/1) and [resulting release PR](https://github.com/extremeheat/prismarine-repo-actions/pull/5)
-<!-- * /fixlint -- run `npm run fix` on the current PR, then push the update to the PR -->
+* /fixlint -- run a lint fix command on the current PR, then push the update to the PR
 

@@ -139,20 +139,26 @@ const commands = {
   },
   async fixlint () {
     if (this.type !== 'pr' && this.type !== 'pull') return
-    const lintCommand = this.config?.lintCommand || 'npm run fix'
+    const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
     function push () {
       exec('git add --all')
       exec('git config user.name "github-actions[bot]"')
       exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
-      exec('git commit -m "Fix linting errors"')
+      try {
+        exec('git commit -m "Fix linting errors"')
+      } catch (e) {
+        // No changes
+        return false
+      }
       exec('git push')
+      return true
     }
     try {
       const stdout = cp.execSync(lintCommand)
       console.log(stdout.toString())
       try {
-        push()
-        await github.comment(this.triggerIssueId, `I fixed all linting errors with \`${lintCommand}\`!`)
+        const ok = push()
+        await github.comment(this.triggerIssueId, ok ? `I fixed all linting errors with \`${lintCommand}\`!` : 'No linting errors found.')
       } catch (e) {
         await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\` which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run \`${lintCommand}\` and push the changes.`)
       }
@@ -181,8 +187,9 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
     if (handler) {
       // add a eyes emoji to the triggering comment
       github.addCommentReaction(triggerCommentId, 'eyes')
-      const config = github.getInput('/' + command.toLowerCase())
-      return handler.apply({ type, config, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
+      const isEnabled = github.getInput(`/${command.toLowerCase()}.enabled`)
+      if (isEnabled == 'false') return // eslint-disable-line eqeqeq
+      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
     }
   }
 })
