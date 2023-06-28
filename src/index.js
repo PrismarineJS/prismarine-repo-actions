@@ -29,7 +29,7 @@ const commands = {
       .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
     console.log('Latest commits', latestCommits.map(e => e.join(', ')))
     if (!latestCommits.length) {
-      github.comment("Sorry, I couldn't find any commits since the last release.")
+      await github.comment("Sorry, I couldn't find any commits since the last release.")
       return
     }
     const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
