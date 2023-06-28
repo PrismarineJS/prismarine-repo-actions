@@ -10,6 +10,8 @@ Github Action for automating repo actions via issue/PR comment commands. To run 
 ## Install
 Add a workflow looking like this in `.github/workflows/comments.yml`:
 
+<strong>Note: In order to use this Action, you need to generate a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) (PAT). While you can use the default `GITHUB_TOKEN` token, commits and PRs opened by the GITHUB_TOKEN won't trigger workflows in the repository.</string>
+
 ```yaml
 name: Repo Commands
 
@@ -28,7 +30,8 @@ jobs:
     - name: Run command handlers
       uses: extremeheat/prismarine-repo-actions@master
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        # NOTE: You must specify a Personal Access Token (PAT) with repo access here. While you can use the default GITHUB_TOKEN, actions taken with it will not trigger other actions, so if you have a CI workflow, commits created by this action will not trigger it.
+        token: ${{ secrets.PAT_TOKEN }}
         # this sets the command to use for installing the repo, if needed for the command
         install-command: npm install
         # To disable the makerelease command, uncomment the following line
@@ -46,8 +49,8 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   * Make a release PR (Node.js and Python projects).
   * This command creates a new PR with a modified HISTORY.md adding a section with the latest commits since the last release PR (commit starting with "Release ") and if they exist, updates the package.json (Node.js) or setup.py/pyproject.toml (Python) manifest files.
   * *This doesn't actually create a release, it just creates a PR that when merged, will trigger your actual release workflow.*
-  * [Example trigger](https://github.com/extremeheat/prismarine-repo-actions/pull/1) and [resulting release PR](https://github.com/extremeheat/prismarine-repo-actions/pull/5)
+  * [Example trigger](https://github.com/extremeheat/prismarine-repo-actions/pull/6) and [resulting release PR](https://github.com/extremeheat/prismarine-repo-actions/pull/7)
 * /fixlint
   * Run a lint fix command on the current PR, then push the update to the PR
-  * [Example trigger](https://github.com/extremeheat/prismarine-repo-actions/pull/1#issuecomment-1611685220)
+  * [Example trigger](https://github.com/extremeheat/prismarine-repo-actions/pull/6)
 
