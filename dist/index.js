@@ -10136,7 +10136,7 @@ const commands = {
       console.log('PR not found', this.triggerIssueId)
       return false
     }
-    exec(`get remote add fork ${prInfo.headCloneURL}`)
+    exec(`git remote add fork ${prInfo.headCloneURL}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout fork/${prInfo.headBranch}`)
     exec(installCommand)
