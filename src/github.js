@@ -109,7 +109,7 @@ async function getPullRequest (id) {
     pull_number: id
   })
   return {
-    canMaintainerModify: data.maintainer_can_modify,
+    canMaintainerModify: data.maintainer_can_modify || (data.base.repo.full_name === data.head.repo.full_name),
     targetBranch: data.base.ref,
     targetRepo: data.base.repo.full_name,
     headBranch: data.head.ref,

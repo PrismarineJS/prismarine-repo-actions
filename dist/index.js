@@ -9726,7 +9726,7 @@ async function getPullRequest (id) {
     pull_number: id
   })
   return {
-    canMaintainerModify: data.maintainer_can_modify,
+    canMaintainerModify: data.maintainer_can_modify || (data.base.repo.full_name === data.head.repo.full_name),
     targetBranch: data.base.ref,
     targetRepo: data.base.repo.full_name,
     headBranch: data.head.ref,
@@ -10135,6 +10135,8 @@ const commands = {
     if (!prInfo) {
       console.log('PR not found', this.triggerIssueId)
       return false
+    } else {
+      console.log('PR found', prInfo)
     }
     exec(`git remote add fork ${prInfo.headCloneURL}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
@@ -10167,6 +10169,7 @@ const commands = {
             await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
             globalThis.__testingLintError = true // test marker
           } catch (e2) {
+            console.log(e2)
             await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
           }
         } else {
@@ -10174,6 +10177,7 @@ const commands = {
             const ok = push()
             await github.comment(this.triggerIssueId, ok ? `I fixed all linting errors with <code>${lintCommand}</code>!` : 'No linting errors found.')
           } catch (e) {
+            console.log(e)
             await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code> which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
           }
         }
