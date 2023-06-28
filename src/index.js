@@ -8,15 +8,15 @@ function findFile (tryPaths) {
   return [path, fs.readFileSync(path, 'utf-8')]
 }
 
-// Go to default branch first in case we trigger on a PR branch
-// exec('git checkout ' + cp.execSync('git symbolic-ref HEAD').toString().trim())
-const repoURL = github.repoURL
-const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-const currentVersion = JSON.parse(currentManifestRaw).version
-const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
-
 const commands = {
   async makerelease (newVersion) {
+    const defaultBranch = await github.getDefaultBranch()
+    exec(`git fetch ${defaultBranch} --depth 16`)
+    exec(`git checkout ${defaultBranch}`)
+    const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+    const currentVersion = JSON.parse(currentManifestRaw).version
+    const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+
     // Make sure we were triggered in a PR. If there was a triggering PR
     if (this.type !== 'pr' && this.type !== 'pull') return
     if (!newVersion) {
@@ -25,7 +25,7 @@ const commands = {
       newVersion = x.join('.')
     }
     const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
+    const latestCommits = cp.execSync(`git log --pretty=format:"%H~~~%an~~~%s" -n 40`)
       .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
     console.log('Latest commits', latestCommits.map(e => e.join(', ')))
     if (!latestCommits.length) {
@@ -36,7 +36,7 @@ const commands = {
 
     for (const [hash, user, message] of latestCommits) {
       if (message.startsWith('Release ')) break
-      else md.push(`* [${message}](${repoURL}/commit/${hash}) (thanks @${user})`)
+      else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
     }
 
     if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
