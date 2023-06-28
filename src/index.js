@@ -153,26 +153,29 @@ const commands = {
       exec('git push')
       return true
     }
-    try {
-      const stdout = cp.execSync(lintCommand)
-      console.log(stdout.toString())
-      try {
-        const ok = push()
-        await github.comment(this.triggerIssueId, ok ? `I fixed all linting errors with \`${lintCommand}\`!` : 'No linting errors found.')
-      } catch (e) {
-        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\` which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run \`${lintCommand}\` and push the changes.`)
-      }
-    } catch (e) {
-      const log = e.stdout.toString()
-      try {
-        push()
-        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run \`${lintCommand}\` and manually fix the remaining errors.`)
-        globalThis.__testingLintError = true // test marker
-      } catch (e2) {
-        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
-      }
-    }
-    return true
+
+    return new Promise((resolve) => {
+      cp.exec(lintCommand, async (error, stdout, stderr) => {
+        const log = stdout.toString() + stderr.toString()
+        if (error) { // Non-zero exit code
+          try {
+            push()
+            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
+            globalThis.__testingLintError = true // test marker
+          } catch (e2) {
+            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
+          }
+        } else {
+          try {
+            const ok = push()
+            await github.comment(this.triggerIssueId, ok ? `I fixed all linting errors with <code>${lintCommand}</code>!` : 'No linting errors found.')
+          } catch (e) {
+            await github.comment(this.triggerIssueId, `I ran <code>${lintCommand}</code> which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
+          }
+        }
+        resolve(true)
+      })
+    })
   }
 }
 
