@@ -10154,7 +10154,7 @@ const commands = {
         console.log('(No changes to commit!)')
         return false
       }
-      exec('git push fork')
+      exec('git push fork bot-fixed-lint:' + prInfo.headBranch)
       return true
     }
 
