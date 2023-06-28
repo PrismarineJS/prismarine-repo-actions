@@ -13,9 +13,9 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v3
       with:
-        ref: master
         fetch-depth: 16
-    - run: git log -n 16
+    - run: git fetch origin master --depth 16
+    - run: git checkout master && git log -n 16
     - name: Run command handlers
       uses: extremeheat/prismarine-repo-actions@master
       with:
