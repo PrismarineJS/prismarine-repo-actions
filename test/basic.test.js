@@ -11,7 +11,9 @@ describe('commands work', () => {
   }
   require('../src/index')
 
-  it('makerelease with no args', (done) => {
+  beforeEach(done => setTimeout(done, 500))
+
+  it('/makerelease with no args', (done) => {
     commentCb({
       type: 'pr',
       role: 'COLLABORATOR',
@@ -27,7 +29,7 @@ describe('commands work', () => {
     })
   })
 
-  it('makerelease with args', (done) => {
+  it('/makerelease with args', (done) => {
     commentCb({
       type: 'pr',
       role: 'COLLABORATOR',
@@ -43,7 +45,7 @@ describe('commands work', () => {
     })
   }).timeout(500)
 
-  it('makerelease with no perms', (done) => {
+  it('/makerelease with no perms', (done) => {
     const shouldBeFalse = commentCb({
       type: 'pr',
       role: '',
@@ -56,7 +58,46 @@ describe('commands work', () => {
     })
     if (shouldBeFalse) throw Error('failed')
     done()
-  }).timeout(1000)
+  }).timeout(500)
+
+  it('/fixlint with no errors', (done) => {
+    commentCb({
+      type: 'pr',
+      role: 'COLLABORATOR',
+      body: '/fixlint',
+      triggerPullMerged: true,
+      issueUser: 'extremeheat',
+      triggerUser: 'extremeheat',
+      triggerURL: '',
+      isAuthor: true
+    }).then((res) => {
+      console.log('CB called')
+      if (res) done()
+      else done(Error('failed'))
+    })
+  }).timeout(6000)
+
+  it('/fixlint with expected errors', (done) => {
+    fs.writeFileSync('broken.js', 'let x')
+    commentCb({
+      type: 'pr',
+      role: 'COLLABORATOR',
+      body: '/fixlint',
+      triggerPullMerged: true,
+      issueUser: 'extremeheat',
+      triggerUser: 'extremeheat',
+      triggerURL: '',
+      isAuthor: true
+    }).then((res) => {
+      fs.rmSync('broken.js')
+      if (res) {
+        if (globalThis.__testingLintError) done()
+        else done(Error('lint error not thrown'))
+      } else {
+        done(Error('failed'))
+      }
+    })
+  }).timeout(6000)
 })
 
 describe('build checks', function () {

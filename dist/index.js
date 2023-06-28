@@ -9625,7 +9625,7 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -9637,6 +9637,8 @@ const context = github.context
 const token = process.env.GITHUB_TOKEN || core.getInput('token')
 if (!token) throw new Error('No Github token was specified, please see the documentation for correct Action usage.')
 const octokit = github.getOctokit(token)
+
+const getInput = (name, required = false) => core.getInput(name, { required })
 
 async function getIssueStatus (title) {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
@@ -9766,7 +9768,7 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
+module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
 
 
 /***/ }),
@@ -10094,6 +10096,37 @@ const commands = {
       await github.createPullRequest(title, body, branchName)
     }
     return true
+  },
+  async fixlint () {
+    if (this.type !== 'pr' && this.type !== 'pull') return
+    const lintCommand = this.config?.lintCommand || 'npm run fix'
+    function push () {
+      exec('git add --all')
+      exec('git config user.name "github-actions[bot]"')
+      exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
+      exec('git commit -m "Fix linting errors"')
+      exec('git push')
+    }
+    try {
+      const stdout = cp.execSync(lintCommand)
+      console.log(stdout.toString())
+      try {
+        push()
+        await github.comment(this.triggerIssueId, `I fixed all linting errors with \`${lintCommand}\`!`)
+      } catch (e) {
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\` which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run \`${lintCommand}\` and push the changes.`)
+      }
+    } catch (e) {
+      const log = e.stdout.toString()
+      try {
+        push()
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run \`${lintCommand}\` and manually fix the remaining errors.`)
+        globalThis.__testingLintError = true // test marker
+      } catch (e2) {
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
+      }
+    }
+    return true
   }
 }
 
@@ -10108,7 +10141,8 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
     if (handler) {
       // add a eyes emoji to the triggering comment
       github.addCommentReaction(triggerCommentId, 'eyes')
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
+      const config = github.getInput('/' + command.toLowerCase())
+      return handler.apply({ type, config, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
     }
   }
 })

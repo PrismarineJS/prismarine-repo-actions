@@ -136,6 +136,37 @@ const commands = {
       await github.createPullRequest(title, body, branchName)
     }
     return true
+  },
+  async fixlint () {
+    if (this.type !== 'pr' && this.type !== 'pull') return
+    const lintCommand = this.config?.lintCommand || 'npm run fix'
+    function push () {
+      exec('git add --all')
+      exec('git config user.name "github-actions[bot]"')
+      exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
+      exec('git commit -m "Fix linting errors"')
+      exec('git push')
+    }
+    try {
+      const stdout = cp.execSync(lintCommand)
+      console.log(stdout.toString())
+      try {
+        push()
+        await github.comment(this.triggerIssueId, `I fixed all linting errors with \`${lintCommand}\`!`)
+      } catch (e) {
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\` which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run \`${lintCommand}\` and push the changes.`)
+      }
+    } catch (e) {
+      const log = e.stdout.toString()
+      try {
+        push()
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run \`${lintCommand}\` and manually fix the remaining errors.`)
+        globalThis.__testingLintError = true // test marker
+      } catch (e2) {
+        await github.comment(this.triggerIssueId, `I ran \`${lintCommand}\`, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
+      }
+    }
+    return true
   }
 }
 
@@ -150,7 +181,8 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
     if (handler) {
       // add a eyes emoji to the triggering comment
       github.addCommentReaction(triggerCommentId, 'eyes')
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
+      const config = github.getInput('/' + command.toLowerCase())
+      return handler.apply({ type, config, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
     }
   }
 })

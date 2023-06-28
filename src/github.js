@@ -8,7 +8,7 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -20,6 +20,8 @@ const context = github.context
 const token = process.env.GITHUB_TOKEN || core.getInput('token')
 if (!token) throw new Error('No Github token was specified, please see the documentation for correct Action usage.')
 const octokit = github.getOctokit(token)
+
+const getInput = (name, required = false) => core.getInput(name, { required })
 
 async function getIssueStatus (title) {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
@@ -149,4 +151,4 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
+module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
