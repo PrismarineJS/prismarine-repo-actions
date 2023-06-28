@@ -13,6 +13,7 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v3
       with:
+        ref: master
         fetch-depth: 16
     - run: git reset --hard origin/HEAD
     - name: Run command handlers
