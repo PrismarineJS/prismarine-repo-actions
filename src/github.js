@@ -8,7 +8,15 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  const getPullRequest = () => ({
+    canMaintainerModify: true,
+    targetBranch: 'target',
+    targetRepo: 'target-repo',
+    headBranch: 'head',
+    headRepo: 'head-repo',
+    headCloneURL: 'clone-url',
+  })
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullRequest, findPullRequest: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -71,7 +79,7 @@ function getDefaultBranch () {
 
 console.log('Default branch is', getDefaultBranch())
 
-async function getPullStatus (titleIncludes, author = 'app/github-actions', status = 'open') {
+async function findPullRequest (titleIncludes, author = 'app/github-actions', status = 'open') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
   const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}`: '')
   const existingPulls = await octokit.rest.search.issuesAndPullRequests({
@@ -93,6 +101,26 @@ async function updatePull (id, { title, body }) {
     body
   })
   console.log(`Updated pull ${pull.data.title}#${pull.data.number}: ${pull.data.html_url}`)
+}
+
+async function getPullRequest (id) {
+  const { data } = await octokit.rest.pulls.get({
+    ...context.repo,
+    pull_number: id
+  })
+  return {
+    canMaintainerModify: data.maintainer_can_modify,
+    targetBranch: data.base.ref,
+    targetRepo: data.base.repo.full_name,
+    headBranch: data.head.ref,
+    headRepo: data.head.repo.full_name,
+    headCloneURL: data.head.repo.clone_url,
+    title: data.title,
+    body: data.body,
+    state: data.state,
+    number: data.number,
+    url: data.html_url
+  }
 }
 
 async function createPullRequest (title, body, fromBranch, intoBranch) {
@@ -151,4 +179,4 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
+module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, findPullRequest, getPullRequest, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }

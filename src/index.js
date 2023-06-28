@@ -114,7 +114,7 @@ const commands = {
     // See if we already have an open issue, if so, update it
     let existingPR = this.existingPR
     if (!existingPR) {
-      const pr = await github.getPullStatus('Release ')
+      const pr = await github.findPullRequest('Release ')
       if (pr) existingPR = pr.id
     }
 
@@ -142,7 +142,14 @@ const commands = {
     const installCommand = github.getInput('install-command') || 'npm install'
     const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
     exec(installCommand)
+
+    const prInfo = await github.getPullRequest(this.triggerIssueId)
+
     function push () {
+      if (!prInfo || !prInfo.canMaintainerModify) throw new Error('Cannot push to PR without maintainer permissions!')
+      exec(`get remote add fork ${prInfo.headCloneURL}`)
+      exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
+      exec(`git checkout fork/${prInfo.headBranch}`)
       exec('git add --all')
       exec('git config user.name "github-actions[bot]"')
       exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
