@@ -9625,7 +9625,7 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { mock: true, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -9678,10 +9678,13 @@ async function comment (id, body) {
   await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body })
 }
 
-async function getDefaultBranch () {
-  const { data } = await octokit.rest.repos.get({ ...context.repo })
-  return data.default_branch
+function getDefaultBranch () {
+  // const { data } = await octokit.rest.repos.get({ ...context.repo })
+  // return data.default_branch
+  return context.repository.default_branch
 }
+
+console.log('Default branch is', getDefaultBranch())
 
 async function getPullStatus (titleIncludes, author = 'app/github-actions', status = 'open') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
@@ -9753,7 +9756,7 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: context.repository.html_url }
 
 
 /***/ }),
@@ -9953,15 +9956,15 @@ function findFile (tryPaths) {
   return [path, fs.readFileSync(path, 'utf-8')]
 }
 
-// Go to default branch first in case we trigger on a PR branch
-// exec('git checkout ' + cp.execSync('git symbolic-ref HEAD').toString().trim())
-const repoURL = github.repoURL
-const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-const currentVersion = JSON.parse(currentManifestRaw).version
-const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
-
 const commands = {
   async makerelease (newVersion) {
+    const defaultBranch = await github.getDefaultBranch()
+    exec(`git fetch ${defaultBranch} --depth 16`)
+    exec(`git checkout ${defaultBranch}`)
+    const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+    const currentVersion = JSON.parse(currentManifestRaw).version
+    const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+
     // Make sure we were triggered in a PR. If there was a triggering PR
     if (this.type !== 'pr' && this.type !== 'pull') return
     if (!newVersion) {
@@ -9981,7 +9984,7 @@ const commands = {
 
     for (const [hash, user, message] of latestCommits) {
       if (message.startsWith('Release ')) break
-      else md.push(`* [${message}](${repoURL}/commit/${hash}) (thanks @${user})`)
+      else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
     }
 
     if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {

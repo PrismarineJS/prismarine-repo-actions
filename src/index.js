@@ -25,7 +25,7 @@ const commands = {
       newVersion = x.join('.')
     }
     const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = cp.execSync(`git log --pretty=format:"%H~~~%an~~~%s" -n 40`)
+    const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
       .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
     console.log('Latest commits', latestCommits.map(e => e.join(', ')))
     if (!latestCommits.length) {
