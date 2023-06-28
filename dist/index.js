@@ -10140,7 +10140,7 @@ const commands = {
     }
     exec(`git remote add fork ${prInfo.headCloneURL}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
-    exec(`git checkout fork/${prInfo.headBranch}`)
+    exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
     exec(installCommand)
 
     function push () {
@@ -10154,7 +10154,7 @@ const commands = {
         console.log('(No changes to commit!)')
         return false
       }
-      exec('git push')
+      exec('git push fork')
       return true
     }
 
