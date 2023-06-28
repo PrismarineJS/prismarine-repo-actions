@@ -10129,15 +10129,20 @@ const commands = {
     if (this.type !== 'pr' && this.type !== 'pull') return
     const installCommand = github.getInput('install-command') || 'npm install'
     const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
-    exec(installCommand)
 
     const prInfo = await github.getPullRequest(this.triggerIssueId)
 
+    if (!prInfo) {
+      console.log('PR not found', this.triggerIssueId)
+      return false
+    }
+    exec(`get remote add fork ${prInfo.headCloneURL}`)
+    exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
+    exec(`git checkout fork/${prInfo.headBranch}`)
+    exec(installCommand)
+
     function push () {
-      if (!prInfo || !prInfo.canMaintainerModify) throw new Error('Cannot push to PR without maintainer permissions!')
-      exec(`get remote add fork ${prInfo.headCloneURL}`)
-      exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
-      exec(`git checkout fork/${prInfo.headBranch}`)
+      if (!prInfo.canMaintainerModify) throw new Error('Cannot push to PR as the author does not allow maintainers to modify it.')
       exec('git add --all')
       exec('git config user.name "github-actions[bot]"')
       exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
