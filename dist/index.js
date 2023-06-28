@@ -10109,7 +10109,7 @@ const commands = {
       try {
         exec('git commit -m "Fix linting errors"')
       } catch (e) {
-        // No changes
+        console.log('(No changes to commit!)')
         return false
       }
       exec('git push')
@@ -10119,6 +10119,8 @@ const commands = {
     return new Promise((resolve) => {
       cp.exec(lintCommand, async (error, stdout, stderr) => {
         const log = stdout.toString() + stderr.toString()
+        console.log('> ', lintCommand)
+        console.log(log)
         if (error) { // Non-zero exit code
           try {
             push()
