@@ -8,7 +8,7 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
   process.env.GITHUB_WORKFLOW = 'Issue comments'
   process.env.GITHUB_ACTION = 'run1'
   process.env.GITHUB_ACTOR = 'test-user'
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullStatus: noop, updatePull: noop, comment: noop, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -79,7 +79,7 @@ async function getPullStatus (titleIncludes, author = 'app/github-actions', stat
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
   if (!existingPull) return {}
-
+  console.log('Found PR #', existingPull.number)
   return { open: existingPull.state === 'open', closed: existingPull.state === 'closed', id: existingPull.number }
 }
 
@@ -106,6 +106,14 @@ async function createPullRequest (title, body, fromBranch, intoBranch) {
   })
 }
 
+async function addCommentReaction (commentId, reaction) {
+  await octokit.rest.reactions.createForIssueComment({
+    ...context.repo,
+    comment_id: commentId,
+    content: reaction
+  })
+}
+
 function onRepoComment (fn) {
   const payload = context.payload
   if (payload.comment && payload.issue) {
@@ -117,6 +125,7 @@ function onRepoComment (fn) {
       issueAuthor: payload.issue.user.login,
       triggerUser: payload.comment.user.login,
       triggerURL: payload.comment.html_url,
+      triggerCommentId: payload.comment.id,
       isAuthor: payload.issue.user.login === payload.comment.user.login
     }, payload)
   }
@@ -139,4 +148,4 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
+module.exports = { getDefaultBranch, getIssueStatus, updateIssue, createIssue, getPullStatus, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }

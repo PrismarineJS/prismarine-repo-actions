@@ -10,6 +10,9 @@ function findFile (tryPaths) {
 
 const commands = {
   async makerelease (newVersion) {
+    // Make sure we were triggered in a PR. If there was a triggering PR
+    if (this.type !== 'pr' && this.type !== 'pull') return
+
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
     exec(`git checkout ${defaultBranch}`)
@@ -17,8 +20,6 @@ const commands = {
     const currentVersion = JSON.parse(currentManifestRaw).version
     const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
 
-    // Make sure we were triggered in a PR. If there was a triggering PR
-    if (this.type !== 'pr' && this.type !== 'pull') return
     if (!newVersion) {
       const x = currentVersion.split('.')
       x[1]++
@@ -31,6 +32,9 @@ const commands = {
     if (!latestCommits.length) {
       await github.comment("Sorry, I couldn't find any commits since the last release.")
       return
+    } else if (this.triggerCommentId) {
+      // add a thumbs up emoji to the triggering comment
+      github.reactToComment(this.triggerCommentId, 'thumbsup')
     }
     const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
@@ -58,7 +62,7 @@ const commands = {
     let existingPR = this.existingPR
     if (!existingPR) {
       const pr = await github.getPullStatus('Release ')
-      if (pr) existingPR = pr.number
+      if (pr) existingPR = pr.id
     }
 
     // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
@@ -73,10 +77,10 @@ const commands = {
     const title = `Release ${newVersion}`
     if (existingPR) {
       console.log('Existing PR # is', existingPR)
-      github.updatePull(existingPR, { title })
+      await github.updatePull(existingPR, { title })
     } else {
       const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
-      github.createPullRequest(title, body, branchName)
+      await github.createPullRequest(title, body, branchName)
     }
     return true
   }
@@ -85,13 +89,13 @@ const commands = {
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL }) => {
+github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerCommentId }) => {
   console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
-    const handler = commands[command]
+    const handler = commands[command.toLowerCase()]
     if (handler) {
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL }, args)
+      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerCommentId }, args)
     }
   }
 })

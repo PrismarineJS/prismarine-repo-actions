@@ -9696,7 +9696,7 @@ async function getPullStatus (titleIncludes, author = 'app/github-actions', stat
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
   if (!existingPull) return {}
-
+  console.log('Found PR #', existingPull.number)
   return { open: existingPull.state === 'open', closed: existingPull.state === 'closed', id: existingPull.number }
 }
 
@@ -10006,7 +10006,7 @@ const commands = {
     let existingPR = this.existingPR
     if (!existingPR) {
       const pr = await github.getPullStatus('Release ')
-      if (pr) existingPR = pr.number
+      if (pr) existingPR = pr.id
     }
 
     // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
@@ -10021,10 +10021,10 @@ const commands = {
     const title = `Release ${newVersion}`
     if (existingPR) {
       console.log('Existing PR # is', existingPR)
-      github.updatePull(existingPR, { title })
+      await github.updatePull(existingPR, { title })
     } else {
       const body = `Triggered on behalf of ${this.triggerUser} in <a href="${this.triggerURL}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
-      github.createPullRequest(title, body, branchName)
+      await github.createPullRequest(title, body, branchName)
     }
     return true
   }
