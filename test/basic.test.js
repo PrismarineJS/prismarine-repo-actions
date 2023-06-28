@@ -63,10 +63,13 @@ describe('build checks', function () {
   it('build is up to date', function () {
     this.timeout(5000)
     cp.execSync('npm run build -- -o test')
-    if (fs.statSync('test/index.js').size === fs.statSync('dist/index.js').size) {
+    const a = fs.readFileSync('test/index.js', 'utf-8').split(/\r?\n/).join('')
+    const b = fs.readFileSync('dist/index.js', 'utf-8').split(/\r?\n/).join('')
+    if (a === b) {
       fs.rmSync('test/index.js')
     } else {
       fs.rmSync('test/index.js')
+      console.log('expected, actual build', a, b)
       throw Error('dist/ is out of sync, run `npm run build`')
     }
   })
