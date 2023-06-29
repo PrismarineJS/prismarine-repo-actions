@@ -18,7 +18,6 @@ jobs:
       uses: JS-DevTools/npm-publish@v1
       with:
         token: ${{ secrets.NPM_AUTH_TOKEN }}
-        dry-run: true
     - name: Create Release
       if: steps.publish.outputs.type != 'none'
       id: create_release
