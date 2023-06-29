@@ -14,10 +14,11 @@ jobs:
       uses: actions/setup-node@master
       with:
         node-version: 18.0.0
-    # - id: publish
-    #   uses: JS-DevTools/npm-publish@v1
-    #   with:
-    #     token: ${{ secrets.NPM_AUTH_TOKEN }}
+    - id: publish
+      uses: JS-DevTools/npm-publish@v1
+      with:
+        token: ${{ secrets.NPM_AUTH_TOKEN }}
+        dry-run: true
     - name: Create Release
       if: steps.publish.outputs.type != 'none'
       id: create_release
