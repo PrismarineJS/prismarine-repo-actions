@@ -10001,6 +10001,8 @@ const commands = {
     // Make sure we were triggered in a PR.
     if (this.type !== 'pr' && this.type !== 'pull') return
 
+    const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
+
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
     exec(`git checkout ${defaultBranch}`)
@@ -10062,7 +10064,7 @@ const commands = {
     const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
     for (const [hash, user, message] of latestCommits) {
-      if (message.startsWith('Release ')) break
+      if (message.startsWith(releaseSeparator)) break
       else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
     }
 
@@ -10113,7 +10115,7 @@ const commands = {
     exec('git add --all')
     exec('git config user.name "github-actions[bot]"')
     exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
-    exec(`git commit -m "Release ${newVersion}"`)
+    exec(`git commit -m "${releaseSeparator}${newVersion}"`)
     exec(`git push origin ${branchName} --force`)
     const title = `Release ${newVersion}`
     if (existingPR) {
