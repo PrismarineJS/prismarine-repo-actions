@@ -93,11 +93,11 @@ const commands = {
     }
 
     if (historyInsertionIndex != null) {
-      newHistoryLines.splice(historyInsertionIndex, 0, ...md)
+      newHistoryLines.splice(historyInsertionIndex, 0, '\n', ...md, '\n')
     } else if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
-      newHistoryLines.splice(1, 0, ...md)
+      newHistoryLines.splice(1, 0, '\n', ...md, '\n')
     } else {
-      newHistoryLines.unshift(...md)
+      newHistoryLines.unshift(...md, '\n')
     }
 
     console.log('Writing HISTORY.md in', historyPath)
