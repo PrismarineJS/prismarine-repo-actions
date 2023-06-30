@@ -9699,12 +9699,10 @@ function getDefaultBranch () {
 
 console.log('Default branch is', getDefaultBranch())
 
-async function findPullRequest (titleIncludes, author = 'app/github-actions', status = 'open') {
+async function findPullRequest (titleIncludes, author = '@me', status = 'open') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
   const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}`: '')
-  const existingPulls = await octokit.rest.search.issuesAndPullRequests({
-    q
-  })
+  const existingPulls = await octokit.rest.search.issuesAndPullRequests({ q })
   console.log('Existing issue for query [', q, '] are', existingPulls.data.items)
   const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
 
@@ -10064,6 +10062,7 @@ const commands = {
     if (!newVersion) {
       const x = currentVersion.split('.')
       x[1]++
+      x[2] = 0
       newVersion = x.join('.')
     }
 
@@ -10223,7 +10222,7 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
 })
 
 github.onUpdatedPR(({ changeType, id, isOpen, createdByUs, title }, context) => {
-  if (changeType === 'title' && isOpen && createdByUs && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
+  if (changeType === 'title' && isOpen && createdByUs && title.old !== title.now && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
     commands.makerelease.call({ type: 'pull', existingPR: id }, title.now.replace('Release ', ''))
   }
 })

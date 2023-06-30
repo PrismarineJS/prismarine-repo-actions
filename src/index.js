@@ -73,6 +73,7 @@ const commands = {
     if (!newVersion) {
       const x = currentVersion.split('.')
       x[1]++
+      x[2] = 0
       newVersion = x.join('.')
     }
 
@@ -232,7 +233,7 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
 })
 
 github.onUpdatedPR(({ changeType, id, isOpen, createdByUs, title }, context) => {
-  if (changeType === 'title' && isOpen && createdByUs && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
+  if (changeType === 'title' && isOpen && createdByUs && title.old !== title.now && title.old.startsWith('Release ') && title.now.startsWith('Release ')) {
     commands.makerelease.call({ type: 'pull', existingPR: id }, title.now.replace('Release ', ''))
   }
 })
