@@ -1,6 +1,8 @@
 /* eslint-env mocha */
 const cp = require('child_process')
 const fs = require('fs')
+const { join } = require('path')
+// const { describe, it, beforeEach, afterEach } = require('node:test')
 globalThis.isMocha = true
 
 describe('commands work', () => {
@@ -10,10 +12,15 @@ describe('commands work', () => {
     commentCb = fn
   }
   require('../src/index')
+  cp.execSync(`git checkout ${__dirname}/history-in-readme-mock ${__dirname}/normal`) // eslint-disable-line
 
   beforeEach(done => setTimeout(done, 500))
+  afterEach(() => {
+    process.chdir(join(__dirname, '..'))
+  })
 
   it('/makerelease with no args', (done) => {
+    process.chdir(join(__dirname, 'normal'))
     commentCb({
       type: 'pr',
       role: 'COLLABORATOR',
@@ -26,10 +33,11 @@ describe('commands work', () => {
     }).then((res) => {
       if (res) done()
       else done(Error('failed'))
-    })
+    }).catch(console.error)
   })
 
   it('/makerelease with args', (done) => {
+    process.chdir(join(__dirname, 'normal'))
     commentCb({
       type: 'pr',
       role: 'COLLABORATOR',
@@ -46,6 +54,7 @@ describe('commands work', () => {
   }).timeout(500)
 
   it('/makerelease with no perms', (done) => {
+    process.chdir(join(__dirname, 'normal'))
     const shouldBeFalse = commentCb({
       type: 'pr',
       role: '',
@@ -58,6 +67,23 @@ describe('commands work', () => {
     })
     if (shouldBeFalse) throw Error('failed')
     done()
+  }).timeout(500)
+
+  it('/makerelease with history in README', (done) => {
+    process.chdir(join(__dirname, 'history-in-readme-mock'))
+    commentCb({
+      type: 'pr',
+      role: 'COLLABORATOR',
+      body: '/makerelease 2.0.0',
+      triggerPullMerged: true,
+      issueUser: 'extremeheat',
+      triggerUser: 'extremeheat',
+      triggerURL: '',
+      isAuthor: true
+    }).then((res) => {
+      if (res) done()
+      else done(Error('failed'))
+    }).catch(console.error)
   }).timeout(500)
 
   it('/fixlint with no errors', (done) => {

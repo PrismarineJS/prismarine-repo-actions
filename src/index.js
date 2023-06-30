@@ -10,16 +10,39 @@ function findFile (tryPaths) {
 
 const commands = {
   async makerelease (newVersion) {
-    // Make sure we were triggered in a PR.
-    if (this.type !== 'pr' && this.type !== 'pull') return
-
     const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
 
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
     exec(`git checkout ${defaultBranch}`)
 
-    const [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+    let historyPath, currentHistory, historyInsertionIndex
+    try {
+      [historyPath, currentHistory] = findFile(['HISTORY.md', 'history.md', './docs/history.md', './docs/HISTORY.md', './doc/history.md', './doc/HISTORY.md'])
+    } catch (e) {
+      [historyPath, currentHistory] = findFile(['readme.md', 'README.md'])
+      const readmeLines = currentHistory.split('\n')
+      for (let i = 0; i < readmeLines.length; i++) {
+        const line = readmeLines[i]
+        if (line.startsWith('#') && line.toLowerCase().endsWith('# history')) {
+          historyInsertionIndex = i + 1
+          // Try to move the README.md README section into a standalone history
+          // const depth = line.indexOf(' ')
+          // const stopAt = Array(depth).fill('#').join('')
+          // const start = i
+          // let stop
+          // for (let j = i; j < readmeLines.length; j++) {
+          //   if (readmeLines[j] === stopAt) {
+          //     stop = j
+          //     break
+          //   }
+          // }
+          // const historySection = readmeLines.splice(start, stop - start)
+          // fs.writeFileSync(his)
+          break
+        }
+      }
+    }
 
     let currentVersion
     // Node.js
@@ -47,7 +70,7 @@ const commands = {
           if (header[0] === 'v' && header[1].isNumeric()) {
             currentVersion = header.slice(1)
             break
-          } else if (header[0].isNumeric()) {
+          } else if (!isNaN(header[0])) {
             currentVersion = header
             break
           }
@@ -57,6 +80,7 @@ const commands = {
         await github.comment(this.triggerIssueId, "Sorry, I couldn't find the current version.")
         return
       }
+      console.log('Current version is', currentVersion)
     }
 
     if (!newVersion) {
@@ -73,14 +97,16 @@ const commands = {
       await github.comment(this.triggerIssueId, "Sorry, I couldn't find any commits since the last release.")
       return
     }
-    const md = [`\n${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
+    const md = [`${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
     for (const [hash, user, message] of latestCommits) {
       if (message.startsWith(releaseSeparator)) break
       else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
     }
 
-    if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
+    if (historyInsertionIndex != null) {
+      newHistoryLines.splice(historyInsertionIndex, 0, ...md)
+    } else if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
       newHistoryLines.splice(1, 0, ...md)
     } else {
       newHistoryLines.unshift(...md)
