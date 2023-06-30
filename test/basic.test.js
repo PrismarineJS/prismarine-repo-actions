@@ -2,7 +2,6 @@
 const cp = require('child_process')
 const fs = require('fs')
 const { join } = require('path')
-// const { describe, it, beforeEach, afterEach } = require('node:test')
 globalThis.isMocha = true
 
 describe('commands work', () => {

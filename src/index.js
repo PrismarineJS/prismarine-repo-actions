@@ -26,19 +26,6 @@ const commands = {
         const line = readmeLines[i]
         if (line.startsWith('#') && line.toLowerCase().endsWith('# history')) {
           historyInsertionIndex = i + 1
-          // Try to move the README.md README section into a standalone history
-          // const depth = line.indexOf(' ')
-          // const stopAt = Array(depth).fill('#').join('')
-          // const start = i
-          // let stop
-          // for (let j = i; j < readmeLines.length; j++) {
-          //   if (readmeLines[j] === stopAt) {
-          //     stop = j
-          //     break
-          //   }
-          // }
-          // const historySection = readmeLines.splice(start, stop - start)
-          // fs.writeFileSync(his)
           break
         }
       }
@@ -114,7 +101,6 @@ const commands = {
 
     console.log('Writing HISTORY.md in', historyPath)
     const genHis = newHistoryLines.join('\n').replace(/\n\n\n/g, '\n\n')
-    // console.log(genHis)
     fs.writeFileSync(historyPath, genHis)
 
     // Node.js
