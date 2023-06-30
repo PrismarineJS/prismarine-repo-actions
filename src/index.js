@@ -92,16 +92,17 @@ const commands = {
       else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
     }
 
+    // Branch based on where to insert new history + strict padding
     if (historyInsertionIndex != null) {
-      newHistoryLines.splice(historyInsertionIndex, 0, '\n', ...md, '\n')
+      newHistoryLines.splice(historyInsertionIndex, newHistoryLines[historyInsertionIndex] === '' ? 1 : 0, '', ...md, '')
     } else if (currentHistory.startsWith('#') && currentHistory.toLowerCase().includes('history')) {
-      newHistoryLines.splice(1, 0, '\n', ...md, '\n')
+      newHistoryLines.splice(1, newHistoryLines[1] === '' ? 1 : 0, '', ...md, '')
     } else {
-      newHistoryLines.unshift(...md, '\n')
+      newHistoryLines.unshift(...md, '')
     }
 
     console.log('Writing HISTORY.md in', historyPath)
-    const genHis = newHistoryLines.join('\n').replace(/\n\n\n/g, '\n\n')
+    const genHis = newHistoryLines.join('\n')
     fs.writeFileSync(historyPath, genHis)
 
     // Node.js
