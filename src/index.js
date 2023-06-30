@@ -78,18 +78,18 @@ const commands = {
     }
 
     const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = cp.execSync('git log --pretty=format:"%H~~~%an~~~%s" -n 40')
-      .toString().split('\n').map(e => e.split('~~~').map(e => e.replace(/</g, '&gt;')))
-    console.log('Latest commits', latestCommits.map(e => e.join(', ')))
+    const latestCommits = await github.getRecentCommitsInRepo(16)
+    console.log('Latest commits', latestCommits)
     if (!latestCommits.length) {
       await github.comment(this.triggerIssueId, "Sorry, I couldn't find any commits since the last release.")
       return
     }
     const md = [`${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
 
-    for (const [hash, user, message] of latestCommits) {
-      if (message.startsWith(releaseSeparator)) break
-      else md.push(`* [${message}](${github.repoURL}/commit/${hash}) (thanks @${user})`)
+    for (const { url, login, message } of latestCommits) {
+      const [title] = message.split('\n')
+      if (title.startsWith(releaseSeparator)) break
+      else md.push(`* [${title}](${url}) (thanks @${login})`)
     }
 
     // Branch based on where to insert new history + strict padding

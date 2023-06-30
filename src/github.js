@@ -16,7 +16,25 @@ if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
     headRepo: 'head-repo',
     headCloneURL: 'clone-url',
   })
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullRequest, findPullRequest: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  const getRecentCommitsInRepo = () => [
+    {
+      sha: '02d67b22e1ba8e354d8ec856b17000ffbc5144a1',
+      login: 'github-actions',
+      name: 'github-actions[bot]',
+      email: 'github-actions[bot]@users.noreply.github.com',
+      message: 'Update README.md',
+      url: 'https://github.com/PrismarineJS/mineflayer/commit/02d67b22e1ba8e354d8ec856b17000ffbc5144a1'
+    },
+    {
+      sha: 'c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0',
+      login: 'github-actions',
+      name: 'github-actions[bot]',
+      email: 'github-actions[bot]@users.noreply.github.com',
+      message: 'Update workflow',
+      url: 'https://github.com/PrismarineJS/mineflayer/commit/c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0'
+    },
+  ]
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullRequest, findPullRequest: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, getRecentCommitsInRepo, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
   return
 }
 
@@ -142,6 +160,21 @@ async function addCommentReaction (commentId, reaction) {
   })
 }
 
+async function getRecentCommitsInRepo (max=100) {
+  const { data } = await octokit.rest.repos.listCommits({
+    ...context.repo,
+    per_page: max
+  })
+  return data.map(commit => ({
+    sha: commit.sha,
+    login: commit.author?.login,
+    name: commit.commit.author.name,
+    email: commit.commit.author.email,
+    message: commit.commit.message,
+    url: commit.html_url
+  }))
+}
+
 function onRepoComment (fn) {
   const payload = context.payload
   if (payload.comment && payload.issue) {
@@ -177,4 +210,4 @@ function onUpdatedPR (fn) {
   }
 }
 
-module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, findPullRequest, getPullRequest, updatePull, createPullRequest, close, comment, addCommentReaction, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
+module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, findPullRequest, getPullRequest, updatePull, createPullRequest, close, comment, addCommentReaction, getRecentCommitsInRepo, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
