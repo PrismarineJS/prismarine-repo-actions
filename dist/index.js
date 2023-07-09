@@ -9664,7 +9664,10 @@ const core = __nccwpck_require__(2186)
 const context = github.context
 
 const token = process.env.GITHUB_TOKEN || core.getInput('token')
-if (!token) throw new Error('No Github token was specified, please see the documentation for correct Action usage.')
+if (!token) {
+  console.error('No Github token was specified, please see the documentation for correct Action usage.')
+  process.exit()
+}
 const octokit = github.getOctokit(token)
 
 const getInput = (name, required = false) => core.getInput(name, { required })
