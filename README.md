@@ -18,7 +18,7 @@ name: Repo Commands
 on:
   issue_comment:        # Handle comment commands
     types: [created]
-  pull_request:         # Handle renamed PRs
+  pull_request_target:  # Handle renamed PRs
     types: [edited]
 
 jobs:
