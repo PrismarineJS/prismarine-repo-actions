@@ -10077,17 +10077,17 @@ const commands = {
 
     let currentVersion
     const manifestVersionSubstring = {}
-    // Node.js
-    if (fs.existsSync('./package.json')) {
-      const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-      currentVersion = JSON.parse(currentManifestRaw).version
-      manifestVersionSubstring['./package.json'] = `"version": "${currentVersion}"`
-    }
     // Python
     for (const file of ['setup.py', 'pyproject.toml']) {
       if (!fs.existsSync(file)) continue
       const currentManifestRaw = fs.readFileSync(file, 'utf8')
       ;[manifestVersionSubstring[file], currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
+    }
+    // Node.js
+    if (fs.existsSync('./package.json')) {
+      const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
+      currentVersion = JSON.parse(currentManifestRaw).version
+      manifestVersionSubstring['./package.json'] = `"version": "${currentVersion}"`
     }
     if (!currentVersion) {
       // Get the latest version from HISTORY.md
