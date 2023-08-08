@@ -31,22 +31,19 @@ const commands = {
       }
     }
 
-    let currentVersion, currentVersionManifestSubstring
+    let currentVersion
+    const manifestVersionSubstring = {}
     // Node.js
     if (fs.existsSync('./package.json')) {
       const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
       currentVersion = JSON.parse(currentManifestRaw).version
-      currentVersionManifestSubstring = `"version": "${currentVersion}"`
+      manifestVersionSubstring['./package.json'] = `"version": "${currentVersion}"`
     }
-    // Python (setup.py)
-    if (fs.existsSync('setup.py')) {
-      const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
-      ;[currentVersionManifestSubstring, currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
-    }
-    // Python (pyproject.toml)
-    if (fs.existsSync('pyproject.toml')) {
-      const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
-      ;[currentVersionManifestSubstring, currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
+    // Python
+    for (const file of ['setup.py', 'pyproject.toml']) {
+      if (!fs.existsSync(file)) continue
+      const currentManifestRaw = fs.readFileSync(file, 'utf8')
+      ;[manifestVersionSubstring[file], currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
     }
     if (!currentVersion) {
       // Get the latest version from HISTORY.md
@@ -109,7 +106,7 @@ const commands = {
     for (const file of ['./package.json', 'setup.py', 'pyproject.toml']) {
       if (!fs.existsSync(file)) continue
       const currentManifestRaw = fs.readFileSync(file, 'utf8')
-      const newManifest = currentManifestRaw.replace(currentVersionManifestSubstring, currentVersionManifestSubstring.replace(currentVersion, newVersion))
+      const newManifest = currentManifestRaw.replace(manifestVersionSubstring[file], manifestVersionSubstring[file].replace(currentVersion, newVersion))
       fs.writeFileSync(file, newManifest)
       console.log('Updated', file, 'from', currentVersion, 'to', newVersion)
     }

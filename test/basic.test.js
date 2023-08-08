@@ -85,6 +85,23 @@ describe('commands work', () => {
     }).catch(console.error)
   }).timeout(500)
 
+  it('/makerelease with python setup.py', (done) => {
+    process.chdir(join(__dirname, 'python'))
+    commentCb({
+      type: 'pr',
+      role: 'COLLABORATOR',
+      body: '/makerelease 2.0.0',
+      triggerPullMerged: true,
+      issueUser: 'extremeheat',
+      triggerUser: 'extremeheat',
+      triggerURL: '',
+      isAuthor: true
+    }).then((res) => {
+      if (res) done()
+      else done(Error('failed'))
+    }).catch(console.error)
+  }).timeout(500)
+
   it('/fixlint with no errors', (done) => {
     commentCb({
       type: 'pr',
