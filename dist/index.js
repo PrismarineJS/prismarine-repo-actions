@@ -1427,6 +1427,19 @@ class HttpClientResponse {
             }));
         });
     }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
 }
 exports.HttpClientResponse = HttpClientResponse;
 function isHttps(requestUrl) {
@@ -1931,7 +1944,13 @@ function getProxyUrl(reqUrl) {
         }
     })();
     if (proxyVar) {
-        return new URL(proxyVar);
+        try {
+            return new URL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new URL(`http://${proxyVar}`);
+        }
     }
     else {
         return undefined;
@@ -10065,12 +10084,12 @@ const commands = {
     // Python (setup.py)
     if (fs.existsSync('setup.py')) {
       const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
-      currentVersion = currentManifestRaw.match(/version="(.*)"/)[1]
+      currentVersion = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/)?.[1]
     }
     // Python (pyproject.toml)
     if (fs.existsSync('pyproject.toml')) {
       const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
-      currentVersion = currentManifestRaw.match(/version = "(.*)"/)[1]
+      currentVersion = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/)?.[1]
     }
     if (!currentVersion) {
       // Get the latest version from HISTORY.md
@@ -10194,7 +10213,12 @@ const commands = {
     exec(`git remote add fork ${prInfo.headCloneURL}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
-    exec(installCommand)
+    try {
+      exec(installCommand)
+    } catch (e) {
+      await github.comment(this.triggerIssueId, `Sorry, I wasn't able to use the <code>${installCommand}</code> command to install the project because of an error.`)
+      return false
+    }
 
     function push () {
       if (!prInfo.canMaintainerModify) throw new Error('Cannot push to PR as the author does not allow maintainers to modify it.')
