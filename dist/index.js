@@ -10075,21 +10075,22 @@ const commands = {
       }
     }
 
-    let currentVersion
+    let currentVersion, currentVersionManifestSubstring
     // Node.js
     if (fs.existsSync('./package.json')) {
       const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
       currentVersion = JSON.parse(currentManifestRaw).version
+      currentVersionManifestSubstring = `"version": "${currentVersion}"`
     }
     // Python (setup.py)
     if (fs.existsSync('setup.py')) {
       const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
-      currentVersion = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/)?.[1]
+      ;[currentVersionManifestSubstring, currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
     }
     // Python (pyproject.toml)
     if (fs.existsSync('pyproject.toml')) {
       const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
-      currentVersion = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/)?.[1]
+      ;[currentVersionManifestSubstring, currentVersion] = currentManifestRaw.match(/version\s?=\s?['"](.*)['"]/) ?? []
     }
     if (!currentVersion) {
       // Get the latest version from HISTORY.md
@@ -10149,26 +10150,12 @@ const commands = {
     const genHis = newHistoryLines.join('\n')
     fs.writeFileSync(historyPath, genHis)
 
-    // Node.js
-    if (fs.existsSync('./package.json')) {
-      const currentManifestRaw = fs.readFileSync('./package.json', 'utf8')
-      const newManifest = currentManifestRaw.replace(`"version": "${currentVersion}"`, `"version": "${newVersion}"`)
-      fs.writeFileSync('package.json', newManifest)
-      console.log('Updated package.json from', currentVersion, 'to', newVersion)
-    }
-    // Python (setup.py)
-    if (fs.existsSync('setup.py')) {
-      const currentManifestRaw = fs.readFileSync('setup.py', 'utf8')
-      const newManifest = currentManifestRaw.replace(`version="${currentVersion}"`, `version="${newVersion}"`)
-      fs.writeFileSync('setup.py', newManifest)
-      console.log('Updated setup.py from', currentVersion, 'to', newVersion)
-    }
-    // Python (pyproject.toml)
-    if (fs.existsSync('pyproject.toml')) {
-      const currentManifestRaw = fs.readFileSync('pyproject.toml', 'utf8')
-      const newManifest = currentManifestRaw.replace(`version = "${currentVersion}"`, `version = "${newVersion}"`)
-      fs.writeFileSync('pyproject.toml', newManifest)
-      console.log('Updated pyproject.toml from', currentVersion, 'to', newVersion)
+    for (const file of ['./package.json', 'setup.py', 'pyproject.toml']) {
+      if (!fs.existsSync(file)) continue
+      const currentManifestRaw = fs.readFileSync(file, 'utf8')
+      const newManifest = currentManifestRaw.replace(currentVersionManifestSubstring, currentVersionManifestSubstring.replace(currentVersion, newVersion))
+      fs.writeFileSync(file, newManifest)
+      console.log('Updated', file, 'from', currentVersion, 'to', newVersion)
     }
 
     // See if we already have an open issue, if so, update it
