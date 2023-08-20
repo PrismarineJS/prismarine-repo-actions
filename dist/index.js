@@ -6004,10 +6004,6 @@ function getNodeRequestOptions(request) {
 		agent = agent(parsedURL);
 	}
 
-	if (!headers.has('Connection') && !agent) {
-		headers.set('Connection', 'close');
-	}
-
 	// HTTP-network fetch step 4.2
 	// chunked encoding is handled by Node.js
 
@@ -9687,6 +9683,10 @@ if (!token) {
   console.error('No Github token was specified, please see the documentation for correct Action usage.')
   process.exit()
 }
+// Depending on if we are using a PAT or the default GITHUB_TOKEN, the currentAuthor is different which matters when searching for bot PRs
+// https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
+const isPAT = token.startsWith('ghp_') || token.startsWith('github_pat_')
+const currentAuthor = isPAT ? '@me' : 'app/github-actions'
 const octokit = github.getOctokit(token)
 
 const getInput = (name, required = false) => core.getInput(name, { required })
@@ -9737,9 +9737,9 @@ function getDefaultBranch () {
   return context.payload.repository.default_branch
 }
 
-console.log('Default branch is', getDefaultBranch())
+console.log('Default branch is', getDefaultBranch(), 'current author is', currentAuthor)
 
-async function findPullRequest (titleIncludes, author = '@me', status = 'open') {
+async function findPullRequest (titleIncludes, author = currentAuthor, status = 'open') {
   // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
   const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}`: '')
   const existingPulls = await octokit.rest.search.issuesAndPullRequests({ q })
