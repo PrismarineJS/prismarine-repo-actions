@@ -4,6 +4,21 @@ inputs:
   token:  
     description: 'Github API token, secrets.GITHUB_TOKEN.'
     required: true
+  install-command:
+    description: What command to run to install the repo if the command requires installing it
+    required: false
+  /makerelease.enabled:
+    description: Whether to enable the `/makerelease` command
+    required: false
+  /makerelease.releaseCommitsStartWith:
+    description: When looking back through all the commits until the most recent release, what separator to stop at
+    required: false
+  /fixlint.enabled:
+    description: Whether or not to enable the `/fixlint` command
+    required: false
+  /fixlint.fix-command:
+    description: What command to use to fix the lint
+    required: false
 runs:
-  using: node16
+  using: node18
   main: dist/index.js

@@ -50,7 +50,7 @@ if (!token) {
 }
 // Depending on if we are using a PAT or the default GITHUB_TOKEN, the currentAuthor is different which matters when searching for bot PRs
 // https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
-const isPAT = token.startsWith('ghp_') || token.startsWith('github_pat_')
+const isPAT = !token.startsWith('ghs_')
 const currentAuthor = isPAT ? '@me' : 'app/github-actions'
 const octokit = github.getOctokit(token)
 
