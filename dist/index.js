@@ -28961,7 +28961,7 @@ if (!token) {
 }
 // Depending on if we are using a PAT or the default GITHUB_TOKEN, the currentAuthor is different which matters when searching for bot PRs
 // https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
-const isPAT = token.startsWith('ghp_') || token.startsWith('github_pat_')
+const isPAT = !token.startsWith('ghs_')
 const currentAuthor = isPAT ? '@me' : 'app/github-actions'
 const octokit = github.getOctokit(token)
 
@@ -31038,6 +31038,7 @@ function findFile (tryPaths) {
 const commands = {
   async makerelease (newVersion) {
     const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
+    const maxListedCommits = github.getInput('/makerelease.maxListedCommits') || 32
 
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
@@ -31103,7 +31104,7 @@ const commands = {
     }
 
     const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = await github.getRecentCommitsInRepo(16)
+    const latestCommits = await github.getRecentCommitsInRepo(maxListedCommits)
     console.log('Latest commits', latestCommits)
     if (!latestCommits.length) {
       await github.comment(this.triggerIssueId, "Sorry, I couldn't find any commits since the last release.")

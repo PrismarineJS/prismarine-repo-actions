@@ -11,6 +11,7 @@ function findFile (tryPaths) {
 const commands = {
   async makerelease (newVersion) {
     const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
+    const maxListedCommits = github.getInput('/makerelease.maxListedCommits') || 32
 
     const defaultBranch = await github.getDefaultBranch()
     exec(`git fetch origin ${defaultBranch} --depth 16`)
@@ -76,7 +77,7 @@ const commands = {
     }
 
     const newHistoryLines = currentHistory.split('\n')
-    const latestCommits = await github.getRecentCommitsInRepo(16)
+    const latestCommits = await github.getRecentCommitsInRepo(maxListedCommits)
     console.log('Latest commits', latestCommits)
     if (!latestCommits.length) {
       await github.comment(this.triggerIssueId, "Sorry, I couldn't find any commits since the last release.")
