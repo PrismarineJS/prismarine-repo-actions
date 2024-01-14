@@ -21,16 +21,19 @@ on:
   pull_request_target:  # Handle renamed PRs
     types: [edited]
 
+# NOTE: You must use a Personal Access Token (PAT) with repo access. While you can use the default GITHUB_TOKEN,
+# actions taken with it will not trigger other actions, so if you have a CI workflow, commits created by this action will not trigger it.
 jobs:
   comment-trigger:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.PAT_TOKEN }}
     - name: Run command handlers
       uses: PrismarineJS/prismarine-repo-actions@master
       with:
-        # NOTE: You must specify a Personal Access Token (PAT) with repo access here. While you can use the default GITHUB_TOKEN, actions taken with it will not trigger other actions, so if you have a CI workflow, commits created by this action will not trigger it.
         token: ${{ secrets.PAT_TOKEN }}
         # See `Options` section below for more info on these options
         install-command: npm install
