@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "@actions/github": "^6.0.0"
+    "@actions/github": "^6.0.0",
+    "gh-helpers": "^0.0.1"
   },
   "standard": {
     "ignore": [
