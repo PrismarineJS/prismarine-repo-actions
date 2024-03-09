@@ -1843,7 +1843,7 @@ class HttpClient {
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
         }
-        if (this._keepAlive && !useProxy) {
+        if (!useProxy) {
             agent = this._agent;
         }
         // if agent is already assigned use that agent.
@@ -1875,15 +1875,11 @@ class HttpClient {
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
         }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
+        // if tunneling agent isn't assigned create a new agent
+        if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
             agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -2208,7 +2204,7 @@ var import_graphql = __nccwpck_require__(8467);
 var import_auth_token = __nccwpck_require__(334);
 
 // pkg/dist-src/version.js
-var VERSION = "5.0.2";
+var VERSION = "5.1.0";
 
 // pkg/dist-src/index.js
 var noop = () => {
@@ -2917,7 +2913,7 @@ __export(dist_src_exports, {
 module.exports = __toCommonJS(dist_src_exports);
 
 // pkg/dist-src/version.js
-var VERSION = "9.1.5";
+var VERSION = "9.2.1";
 
 // pkg/dist-src/normalize-paginated-list-response.js
 function normalizePaginatedListResponse(response) {
@@ -3078,6 +3074,8 @@ var paginatingEndpoints = [
   "GET /orgs/{org}/members/{username}/codespaces",
   "GET /orgs/{org}/migrations",
   "GET /orgs/{org}/migrations/{migration_id}/repositories",
+  "GET /orgs/{org}/organization-roles/{role_id}/teams",
+  "GET /orgs/{org}/organization-roles/{role_id}/users",
   "GET /orgs/{org}/outside_collaborators",
   "GET /orgs/{org}/packages",
   "GET /orgs/{org}/packages/{package_type}/{package_name}/versions",
@@ -3314,7 +3312,7 @@ __export(dist_src_exports, {
 module.exports = __toCommonJS(dist_src_exports);
 
 // pkg/dist-src/version.js
-var VERSION = "10.2.0";
+var VERSION = "10.4.1";
 
 // pkg/dist-src/generated/endpoints.js
 var Endpoints = {
@@ -3441,6 +3439,9 @@ var Endpoints = {
       "GET /repos/{owner}/{repo}/actions/permissions/selected-actions"
     ],
     getArtifact: ["GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}"],
+    getCustomOidcSubClaimForRepo: [
+      "GET /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
     getEnvironmentPublicKey: [
       "GET /repositories/{repository_id}/environments/{environment_name}/secrets/public-key"
     ],
@@ -3593,6 +3594,9 @@ var Endpoints = {
     setCustomLabelsForSelfHostedRunnerForRepo: [
       "PUT /repos/{owner}/{repo}/actions/runners/{runner_id}/labels"
     ],
+    setCustomOidcSubClaimForRepo: [
+      "PUT /repos/{owner}/{repo}/actions/oidc/customization/sub"
+    ],
     setGithubActionsDefaultWorkflowPermissionsOrganization: [
       "PUT /orgs/{org}/actions/permissions/workflow"
     ],
@@ -3662,6 +3666,7 @@ var Endpoints = {
     listWatchersForRepo: ["GET /repos/{owner}/{repo}/subscribers"],
     markNotificationsAsRead: ["PUT /notifications"],
     markRepoNotificationsAsRead: ["PUT /repos/{owner}/{repo}/notifications"],
+    markThreadAsDone: ["DELETE /notifications/threads/{thread_id}"],
     markThreadAsRead: ["PATCH /notifications/threads/{thread_id}"],
     setRepoSubscription: ["PUT /repos/{owner}/{repo}/subscription"],
     setThreadSubscription: [
@@ -3938,10 +3943,10 @@ var Endpoints = {
     updateForAuthenticatedUser: ["PATCH /user/codespaces/{codespace_name}"]
   },
   copilot: {
-    addCopilotForBusinessSeatsForTeams: [
+    addCopilotSeatsForTeams: [
       "POST /orgs/{org}/copilot/billing/selected_teams"
     ],
-    addCopilotForBusinessSeatsForUsers: [
+    addCopilotSeatsForUsers: [
       "POST /orgs/{org}/copilot/billing/selected_users"
     ],
     cancelCopilotSeatAssignmentForTeams: [
@@ -4254,9 +4259,23 @@ var Endpoints = {
       }
     ]
   },
+  oidc: {
+    getOidcCustomSubTemplateForOrg: [
+      "GET /orgs/{org}/actions/oidc/customization/sub"
+    ],
+    updateOidcCustomSubTemplateForOrg: [
+      "PUT /orgs/{org}/actions/oidc/customization/sub"
+    ]
+  },
   orgs: {
     addSecurityManagerTeam: [
       "PUT /orgs/{org}/security-managers/teams/{team_slug}"
+    ],
+    assignTeamToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    assignUserToOrgRole: [
+      "PUT /orgs/{org}/organization-roles/users/{username}/{role_id}"
     ],
     blockUser: ["PUT /orgs/{org}/blocks/{username}"],
     cancelInvitation: ["DELETE /orgs/{org}/invitations/{invitation_id}"],
@@ -4266,6 +4285,7 @@ var Endpoints = {
     convertMemberToOutsideCollaborator: [
       "PUT /orgs/{org}/outside_collaborators/{username}"
     ],
+    createCustomOrganizationRole: ["POST /orgs/{org}/organization-roles"],
     createInvitation: ["POST /orgs/{org}/invitations"],
     createOrUpdateCustomProperties: ["PATCH /orgs/{org}/properties/schema"],
     createOrUpdateCustomPropertiesValuesForRepos: [
@@ -4276,6 +4296,9 @@ var Endpoints = {
     ],
     createWebhook: ["POST /orgs/{org}/hooks"],
     delete: ["DELETE /orgs/{org}"],
+    deleteCustomOrganizationRole: [
+      "DELETE /orgs/{org}/organization-roles/{role_id}"
+    ],
     deleteWebhook: ["DELETE /orgs/{org}/hooks/{hook_id}"],
     enableOrDisableSecurityProductOnAllOrgRepos: [
       "POST /orgs/{org}/{security_product}/{enablement}"
@@ -4287,6 +4310,7 @@ var Endpoints = {
     ],
     getMembershipForAuthenticatedUser: ["GET /user/memberships/orgs/{org}"],
     getMembershipForUser: ["GET /orgs/{org}/memberships/{username}"],
+    getOrgRole: ["GET /orgs/{org}/organization-roles/{role_id}"],
     getWebhook: ["GET /orgs/{org}/hooks/{hook_id}"],
     getWebhookConfigForOrg: ["GET /orgs/{org}/hooks/{hook_id}/config"],
     getWebhookDelivery: [
@@ -4302,6 +4326,12 @@ var Endpoints = {
     listInvitationTeams: ["GET /orgs/{org}/invitations/{invitation_id}/teams"],
     listMembers: ["GET /orgs/{org}/members"],
     listMembershipsForAuthenticatedUser: ["GET /user/memberships/orgs"],
+    listOrgRoleTeams: ["GET /orgs/{org}/organization-roles/{role_id}/teams"],
+    listOrgRoleUsers: ["GET /orgs/{org}/organization-roles/{role_id}/users"],
+    listOrgRoles: ["GET /orgs/{org}/organization-roles"],
+    listOrganizationFineGrainedPermissions: [
+      "GET /orgs/{org}/organization-fine-grained-permissions"
+    ],
     listOutsideCollaborators: ["GET /orgs/{org}/outside_collaborators"],
     listPatGrantRepositories: [
       "GET /orgs/{org}/personal-access-tokens/{pat_id}/repositories"
@@ -4316,6 +4346,9 @@ var Endpoints = {
     listSecurityManagerTeams: ["GET /orgs/{org}/security-managers"],
     listWebhookDeliveries: ["GET /orgs/{org}/hooks/{hook_id}/deliveries"],
     listWebhooks: ["GET /orgs/{org}/hooks"],
+    patchCustomOrganizationRole: [
+      "PATCH /orgs/{org}/organization-roles/{role_id}"
+    ],
     pingWebhook: ["POST /orgs/{org}/hooks/{hook_id}/pings"],
     redeliverWebhookDelivery: [
       "POST /orgs/{org}/hooks/{hook_id}/deliveries/{delivery_id}/attempts"
@@ -4339,6 +4372,18 @@ var Endpoints = {
     ],
     reviewPatGrantRequestsInBulk: [
       "POST /orgs/{org}/personal-access-token-requests"
+    ],
+    revokeAllOrgRolesTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}"
+    ],
+    revokeAllOrgRolesUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}"
+    ],
+    revokeOrgRoleTeam: [
+      "DELETE /orgs/{org}/organization-roles/teams/{team_slug}/{role_id}"
+    ],
+    revokeOrgRoleUser: [
+      "DELETE /orgs/{org}/organization-roles/users/{username}/{role_id}"
     ],
     setMembershipForUser: ["PUT /orgs/{org}/memberships/{username}"],
     setPublicMembershipForAuthenticatedUser: [
@@ -4630,6 +4675,9 @@ var Endpoints = {
       {},
       { mapToData: "users" }
     ],
+    cancelPagesDeployment: [
+      "POST /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}/cancel"
+    ],
     checkAutomatedSecurityFixes: [
       "GET /repos/{owner}/{repo}/automated-security-fixes"
     ],
@@ -4665,12 +4713,15 @@ var Endpoints = {
     createForAuthenticatedUser: ["POST /user/repos"],
     createFork: ["POST /repos/{owner}/{repo}/forks"],
     createInOrg: ["POST /orgs/{org}/repos"],
+    createOrUpdateCustomPropertiesValues: [
+      "PATCH /repos/{owner}/{repo}/properties/values"
+    ],
     createOrUpdateEnvironment: [
       "PUT /repos/{owner}/{repo}/environments/{environment_name}"
     ],
     createOrUpdateFileContents: ["PUT /repos/{owner}/{repo}/contents/{path}"],
     createOrgRuleset: ["POST /orgs/{org}/rulesets"],
-    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployment"],
+    createPagesDeployment: ["POST /repos/{owner}/{repo}/pages/deployments"],
     createPagesSite: ["POST /repos/{owner}/{repo}/pages"],
     createRelease: ["POST /repos/{owner}/{repo}/releases"],
     createRepoRuleset: ["POST /repos/{owner}/{repo}/rulesets"],
@@ -4823,6 +4874,9 @@ var Endpoints = {
     getOrgRulesets: ["GET /orgs/{org}/rulesets"],
     getPages: ["GET /repos/{owner}/{repo}/pages"],
     getPagesBuild: ["GET /repos/{owner}/{repo}/pages/builds/{build_id}"],
+    getPagesDeployment: [
+      "GET /repos/{owner}/{repo}/pages/deployments/{pages_deployment_id}"
+    ],
     getPagesHealthCheck: ["GET /repos/{owner}/{repo}/pages/health"],
     getParticipationStats: ["GET /repos/{owner}/{repo}/stats/participation"],
     getPullRequestReviewProtection: [
@@ -5033,6 +5087,9 @@ var Endpoints = {
     ]
   },
   securityAdvisories: {
+    createFork: [
+      "POST /repos/{owner}/{repo}/security-advisories/{ghsa_id}/forks"
+    ],
     createPrivateVulnerabilityReport: [
       "POST /repos/{owner}/{repo}/security-advisories/reports"
     ],
@@ -5524,7 +5581,7 @@ var import_endpoint = __nccwpck_require__(9440);
 var import_universal_user_agent = __nccwpck_require__(5030);
 
 // pkg/dist-src/version.js
-var VERSION = "8.1.6";
+var VERSION = "8.2.0";
 
 // pkg/dist-src/is-plain-object.js
 function isPlainObject(value) {
@@ -5668,11 +5725,17 @@ async function getResponseData(response) {
 function toErrorMessage(data) {
   if (typeof data === "string")
     return data;
+  let suffix;
+  if ("documentation_url" in data) {
+    suffix = ` - ${data.documentation_url}`;
+  } else {
+    suffix = "";
+  }
   if ("message" in data) {
     if (Array.isArray(data.errors)) {
-      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}`;
+      return `${data.message}: ${data.errors.map(JSON.stringify).join(", ")}${suffix}`;
     }
-    return data.message;
+    return `${data.message}${suffix}`;
   }
   return `Unknown error: ${JSON.stringify(data)}`;
 }
@@ -5919,6 +5982,234 @@ class Deprecation extends Error {
 }
 
 exports.Deprecation = Deprecation;
+
+
+/***/ }),
+
+/***/ 3634:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const noop = () => { }
+if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
+  // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
+  process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
+  process.env.GITHUB_EVENT_NAME = 'issue_comment'
+  process.env.GITHUB_SHA = 'cb2fd97b6eae9f2c7fee79d5a86eb9c3b4ac80d8'
+  process.env.GITHUB_REF = 'refs/heads/master'
+  process.env.GITHUB_WORKFLOW = 'Issue comments'
+  process.env.GITHUB_ACTION = 'run1'
+  process.env.GITHUB_ACTOR = 'test-user'
+  const getPullRequest = () => ({
+    canMaintainerModify: true,
+    targetBranch: 'target',
+    targetRepo: 'target-repo',
+    headBranch: 'head',
+    headRepo: 'head-repo',
+    headCloneURL: 'clone-url'
+  })
+  const getRecentCommitsInRepo = () => [
+    {
+      sha: '02d67b22e1ba8e354d8ec856b17000ffbc5144a1',
+      login: 'github-actions',
+      name: 'github-actions[bot]',
+      email: 'github-actions[bot]@users.noreply.github.com',
+      message: 'Update README.md',
+      url: 'https://github.com/PrismarineJS/mineflayer/commit/02d67b22e1ba8e354d8ec856b17000ffbc5144a1'
+    },
+    {
+      sha: 'c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0',
+      login: 'github-actions',
+      name: 'github-actions[bot]',
+      email: 'github-actions[bot]@users.noreply.github.com',
+      message: 'Update workflow',
+      url: 'https://github.com/PrismarineJS/mineflayer/commit/c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0'
+    }
+  ]
+  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullRequest, findPullRequest: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, getRecentCommitsInRepo, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
+  // TODO: standardjs breaks without this eval, as it doesn't allow top level return
+  return
+}
+
+// const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
+const github = __nccwpck_require__(5438)
+const core = __nccwpck_require__(2186)
+const context = github.context
+
+const token = process.env.GITHUB_TOKEN || core.getInput('token')
+if (!token) {
+  console.error('No Github token was specified, please see the documentation for correct Action usage.')
+  process.exit()
+}
+// Depending on if we are using a PAT or the default GITHUB_TOKEN, the currentAuthor is different which matters when searching for bot PRs
+// https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
+const isPAT = !token.startsWith('ghs_')
+const currentAuthor = isPAT ? '@me' : 'app/github-actions'
+const octokit = github.getOctokit(token)
+
+const getInput = (name, required = false) => core.getInput(name, { required })
+
+async function getIssueStatus (title) {
+  // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
+  const existingIssues = await octokit.rest.search.issuesAndPullRequests({
+    q: `is:issue repo:${process.env.GITHUB_REPOSITORY} in:title ${title}`
+  })
+  // console.log('Existing issues', existingIssues)
+  const existingIssue = existingIssues.data.items.find(issue => issue.title === title)
+
+  if (!existingIssue) return {}
+
+  return { open: existingIssue.state === 'open', closed: existingIssue.state === 'closed', id: existingIssue.number }
+}
+
+async function updateIssue (id, payload) {
+  const issue = await octokit.rest.issues.update({
+    ...context.repo,
+    issue_number: id,
+    body: payload.body
+  })
+  console.log(`Updated issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
+}
+
+async function createIssue (payload) {
+  const issue = await octokit.rest.issues.create({
+    ...context.repo,
+    ...payload
+  })
+  console.log(`Created issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
+}
+
+async function close (id, reason) {
+  if (reason) await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body: reason })
+  const issue = await octokit.rest.issues.update({ ...context.repo, issue_number: id, state: 'closed' })
+  console.log(`Closed issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
+}
+
+async function comment (id, body) {
+  await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body })
+}
+
+function getDefaultBranch () {
+  // const { data } = await octokit.rest.repos.get({ ...context.repo })
+  // return data.default_branch
+  return context.payload.repository.default_branch
+}
+
+console.log('Default branch is', getDefaultBranch(), 'current author is', currentAuthor)
+
+async function findPullRequest (titleIncludes, author = currentAuthor, status = 'open') {
+  // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
+  const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}` : '')
+  const existingPulls = await octokit.rest.search.issuesAndPullRequests({ q })
+  console.log('Existing issue for query [', q, '] are', existingPulls.data.items)
+  const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
+
+  if (!existingPull) return {}
+  console.log('Found PR #', existingPull.number)
+  return { open: existingPull.state === 'open', closed: existingPull.state === 'closed', id: existingPull.number }
+}
+
+async function updatePull (id, { title, body }) {
+  const pull = await octokit.rest.pulls.update({
+    ...context.repo,
+    pull_number: id,
+    title,
+    body
+  })
+  console.log(`Updated pull ${pull.data.title}#${pull.data.number}: ${pull.data.html_url}`)
+}
+
+async function getPullRequest (id) {
+  const { data } = await octokit.rest.pulls.get({
+    ...context.repo,
+    pull_number: id
+  })
+  return {
+    canMaintainerModify: data.maintainer_can_modify || (data.base.repo.full_name === data.head.repo.full_name),
+    targetBranch: data.base.ref,
+    targetRepo: data.base.repo.full_name,
+    headBranch: data.head.ref,
+    headRepo: data.head.repo.full_name,
+    headCloneURL: data.head.repo.clone_url,
+    title: data.title,
+    body: data.body,
+    state: data.state,
+    number: data.number,
+    url: data.html_url
+  }
+}
+
+async function createPullRequest (title, body, fromBranch, intoBranch) {
+  if (!intoBranch) {
+    intoBranch = await getDefaultBranch()
+  }
+  await octokit.rest.pulls.create({
+    ...context.repo,
+    title,
+    body,
+    head: fromBranch,
+    base: intoBranch
+  })
+}
+
+async function addCommentReaction (commentId, reaction) {
+  await octokit.rest.reactions.createForIssueComment({
+    ...context.repo,
+    comment_id: commentId,
+    content: reaction
+  })
+}
+
+async function getRecentCommitsInRepo (max = 100) {
+  const { data } = await octokit.rest.repos.listCommits({
+    ...context.repo,
+    per_page: max
+  })
+  return data.map(commit => ({
+    sha: commit.sha,
+    login: commit.author?.login,
+    name: commit.commit.author.name,
+    email: commit.commit.author.email,
+    message: commit.commit.message,
+    url: commit.html_url
+  }))
+}
+
+function onRepoComment (fn) {
+  const payload = context.payload
+  if (payload.comment && payload.issue) {
+    fn({
+      role: payload.comment.author_association,
+      body: payload.comment.body,
+      type: payload.issue.pull_request ? 'pull' : 'issue',
+      triggerPullMerged: payload.issue.pull_request?.merged,
+      issueAuthor: payload.issue.user.login,
+      triggerUser: payload.comment.user.login,
+      triggerURL: payload.comment.html_url,
+      triggerIssueId: payload.issue.number,
+      triggerCommentId: payload.comment.id,
+      isAuthor: payload.issue.user.login === payload.comment.user.login
+    }, payload)
+  }
+}
+
+function onUpdatedPR (fn) {
+  const payload = context.payload
+  if (payload.action === 'edited' && payload.pull_request && payload.changes) {
+    fn({
+      id: payload.pull_request.number,
+      changeType: payload.changes.title ? 'title' : payload.changes.body ? 'body' : 'unknown',
+      title: {
+        old: payload.changes.title ? payload.changes.title.from : undefined,
+        now: payload.pull_request.title
+      },
+      // check if created by Github Actions
+      createdByUs: payload.pull_request.user.login.includes('github-actions'),
+      isOpen: payload.pull_request.state === 'open'
+    })
+  }
+}
+
+module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, findPullRequest, getPullRequest, updatePull, createPullRequest, close, comment, addCommentReaction, getRecentCommitsInRepo, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
 
 
 /***/ }),
@@ -18032,6 +18323,9 @@ function httpRedirectFetch (fetchParams, response) {
     // https://fetch.spec.whatwg.org/#cors-non-wildcard-request-header-name
     request.headersList.delete('authorization')
 
+    // https://fetch.spec.whatwg.org/#authentication-entries
+    request.headersList.delete('proxy-authorization', true)
+
     // "Cookie" and "Host" are forbidden request-headers, which undici doesn't implement.
     request.headersList.delete('cookie')
     request.headersList.delete('host')
@@ -28906,233 +29200,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 8396:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const noop = () => { }
-if (globalThis.isMocha || !process.env.GITHUB_REPOSITORY) {
-  // mock a bunch of things for testing locally -- https://github.com/actions/toolkit/issues/71
-  process.env.GITHUB_REPOSITORY = 'PrismarineJS/bedrock-protocol'
-  process.env.GITHUB_EVENT_NAME = 'issue_comment'
-  process.env.GITHUB_SHA = 'cb2fd97b6eae9f2c7fee79d5a86eb9c3b4ac80d8'
-  process.env.GITHUB_REF = 'refs/heads/master'
-  process.env.GITHUB_WORKFLOW = 'Issue comments'
-  process.env.GITHUB_ACTION = 'run1'
-  process.env.GITHUB_ACTOR = 'test-user'
-  const getPullRequest = () => ({
-    canMaintainerModify: true,
-    targetBranch: 'target',
-    targetRepo: 'target-repo',
-    headBranch: 'head',
-    headRepo: 'head-repo',
-    headCloneURL: 'clone-url',
-  })
-  const getRecentCommitsInRepo = () => [
-    {
-      sha: '02d67b22e1ba8e354d8ec856b17000ffbc5144a1',
-      login: 'github-actions',
-      name: 'github-actions[bot]',
-      email: 'github-actions[bot]@users.noreply.github.com',
-      message: 'Update README.md',
-      url: 'https://github.com/PrismarineJS/mineflayer/commit/02d67b22e1ba8e354d8ec856b17000ffbc5144a1'
-    },
-    {
-      sha: 'c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0',
-      login: 'github-actions',
-      name: 'github-actions[bot]',
-      email: 'github-actions[bot]@users.noreply.github.com',
-      message: 'Update workflow',
-      url: 'https://github.com/PrismarineJS/mineflayer/commit/c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0'
-    },
-  ]
-  module.exports = { mock: true, getDefaultBranch: () => 'master', getInput: noop, getIssueStatus: noop, updateIssue: noop, createIssue: noop, getPullRequest, findPullRequest: noop, updatePull: noop, comment: console.log, createPullRequest: noop, addCommentReaction: noop, getRecentCommitsInRepo, onRepoComment: noop, onUpdatedPR: noop, repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY }
-  return
-}
-
-// const { Octokit } = require('@octokit/rest') // https://github.com/octokit/rest.js
-const github = __nccwpck_require__(5438)
-const core = __nccwpck_require__(2186)
-const context = github.context
-
-const token = process.env.GITHUB_TOKEN || core.getInput('token')
-if (!token) {
-  console.error('No Github token was specified, please see the documentation for correct Action usage.')
-  process.exit()
-}
-// Depending on if we are using a PAT or the default GITHUB_TOKEN, the currentAuthor is different which matters when searching for bot PRs
-// https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
-const isPAT = !token.startsWith('ghs_')
-const currentAuthor = isPAT ? '@me' : 'app/github-actions'
-const octokit = github.getOctokit(token)
-
-const getInput = (name, required = false) => core.getInput(name, { required })
-
-async function getIssueStatus (title) {
-  // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
-  const existingIssues = await octokit.rest.search.issuesAndPullRequests({
-    q: `is:issue repo:${process.env.GITHUB_REPOSITORY} in:title ${title}`
-  })
-  // console.log('Existing issues', existingIssues)
-  const existingIssue = existingIssues.data.items.find(issue => issue.title === title)
-
-  if (!existingIssue) return {}
-
-  return { open: existingIssue.state === 'open', closed: existingIssue.state === 'closed', id: existingIssue.number }
-}
-
-async function updateIssue (id, payload) {
-  const issue = await octokit.rest.issues.update({
-    ...context.repo,
-    issue_number: id,
-    body: payload.body
-  })
-  console.log(`Updated issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
-}
-
-async function createIssue (payload) {
-  const issue = await octokit.rest.issues.create({
-    ...context.repo,
-    ...payload
-  })
-  console.log(`Created issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
-}
-
-async function close (id, reason) {
-  if (reason) await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body: reason })
-  const issue = await octokit.rest.issues.update({ ...context.repo, issue_number: id, state: 'closed' })
-  console.log(`Closed issue ${issue.data.title}#${issue.data.number}: ${issue.data.html_url}`)
-}
-
-async function comment (id, body) {
-  await octokit.rest.issues.createComment({ ...context.repo, issue_number: id, body })
-}
-
-function getDefaultBranch () {
-  // const { data } = await octokit.rest.repos.get({ ...context.repo })
-  // return data.default_branch
-  return context.payload.repository.default_branch
-}
-
-console.log('Default branch is', getDefaultBranch(), 'current author is', currentAuthor)
-
-async function findPullRequest (titleIncludes, author = currentAuthor, status = 'open') {
-  // https://docs.github.com/en/rest/reference/search#search-issues-and-pull-requests
-  const q = `is:pr repo:${process.env.GITHUB_REPOSITORY} in:title ${titleIncludes} ` + (author ? `author:${author}` : '') + (status ? ` is:${status}`: '')
-  const existingPulls = await octokit.rest.search.issuesAndPullRequests({ q })
-  console.log('Existing issue for query [', q, '] are', existingPulls.data.items)
-  const existingPull = existingPulls.data.items.find(issue => issue.title.includes(titleIncludes))
-
-  if (!existingPull) return {}
-  console.log('Found PR #', existingPull.number)
-  return { open: existingPull.state === 'open', closed: existingPull.state === 'closed', id: existingPull.number }
-}
-
-async function updatePull (id, { title, body }) {
-  const pull = await octokit.rest.pulls.update({
-    ...context.repo,
-    pull_number: id,
-    title,
-    body
-  })
-  console.log(`Updated pull ${pull.data.title}#${pull.data.number}: ${pull.data.html_url}`)
-}
-
-async function getPullRequest (id) {
-  const { data } = await octokit.rest.pulls.get({
-    ...context.repo,
-    pull_number: id
-  })
-  return {
-    canMaintainerModify: data.maintainer_can_modify || (data.base.repo.full_name === data.head.repo.full_name),
-    targetBranch: data.base.ref,
-    targetRepo: data.base.repo.full_name,
-    headBranch: data.head.ref,
-    headRepo: data.head.repo.full_name,
-    headCloneURL: data.head.repo.clone_url,
-    title: data.title,
-    body: data.body,
-    state: data.state,
-    number: data.number,
-    url: data.html_url
-  }
-}
-
-async function createPullRequest (title, body, fromBranch, intoBranch) {
-  if (!intoBranch) {
-    intoBranch = await getDefaultBranch()
-  }
-  await octokit.rest.pulls.create({
-    ...context.repo,
-    title,
-    body,
-    head: fromBranch,
-    base: intoBranch
-  })
-}
-
-async function addCommentReaction (commentId, reaction) {
-  await octokit.rest.reactions.createForIssueComment({
-    ...context.repo,
-    comment_id: commentId,
-    content: reaction
-  })
-}
-
-async function getRecentCommitsInRepo (max=100) {
-  const { data } = await octokit.rest.repos.listCommits({
-    ...context.repo,
-    per_page: max
-  })
-  return data.map(commit => ({
-    sha: commit.sha,
-    login: commit.author?.login,
-    name: commit.commit.author.name,
-    email: commit.commit.author.email,
-    message: commit.commit.message,
-    url: commit.html_url
-  }))
-}
-
-function onRepoComment (fn) {
-  const payload = context.payload
-  if (payload.comment && payload.issue) {
-    fn({
-      role: payload.comment.author_association,
-      body: payload.comment.body,
-      type: payload.issue.pull_request ? 'pull' : 'issue',
-      triggerPullMerged: payload.issue.pull_request?.merged,
-      issueAuthor: payload.issue.user.login,
-      triggerUser: payload.comment.user.login,
-      triggerURL: payload.comment.html_url,
-      triggerIssueId: payload.issue.number,
-      triggerCommentId: payload.comment.id,
-      isAuthor: payload.issue.user.login === payload.comment.user.login
-    }, payload)
-  }
-}
-
-function onUpdatedPR (fn) {
-  const payload = context.payload
-  if (payload.action === 'edited' && payload.pull_request && payload.changes) {
-    fn({
-      id: payload.pull_request.number,
-      changeType: payload.changes.title ? 'title' : payload.changes.body ? 'body' : 'unknown',
-      title: {
-        old: payload.changes.title ? payload.changes.title.from : undefined,
-        now: payload.pull_request.title
-      },
-      // check if created by Github Actions
-      createdByUs: payload.pull_request.user.login.includes('github-actions'),
-      isOpen: payload.pull_request.state === 'open'
-    })
-  }
-}
-
-module.exports = { getDefaultBranch, getInput, getIssueStatus, updateIssue, createIssue, findPullRequest, getPullRequest, updatePull, createPullRequest, close, comment, addCommentReaction, getRecentCommitsInRepo, onRepoComment, onUpdatedPR, repoURL: context.payload.repository.html_url }
-
-
-/***/ }),
-
 /***/ 9491:
 /***/ ((module) => {
 
@@ -29449,7 +29516,7 @@ Dicer.prototype._write = function (data, encoding, cb) {
   if (this._headerFirst && this._isPreamble) {
     if (!this._part) {
       this._part = new PartStream(this._partOpts)
-      if (this._events.preamble) { this.emit('preamble', this._part) } else { this._ignore() }
+      if (this.listenerCount('preamble') !== 0) { this.emit('preamble', this._part) } else { this._ignore() }
     }
     const r = this._hparser.push(data)
     if (!this._inHeader && r !== undefined && r < data.length) { data = data.slice(r) } else { return cb() }
@@ -29506,7 +29573,7 @@ Dicer.prototype._oninfo = function (isMatch, data, start, end) {
       }
     }
     if (this._dashes === 2) {
-      if ((start + i) < end && this._events.trailer) { this.emit('trailer', data.slice(start + i, end)) }
+      if ((start + i) < end && this.listenerCount('trailer') !== 0) { this.emit('trailer', data.slice(start + i, end)) }
       this.reset()
       this._finished = true
       // no more parts will be added
@@ -29524,7 +29591,13 @@ Dicer.prototype._oninfo = function (isMatch, data, start, end) {
     this._part._read = function (n) {
       self._unpause()
     }
-    if (this._isPreamble && this._events.preamble) { this.emit('preamble', this._part) } else if (this._isPreamble !== true && this._events.part) { this.emit('part', this._part) } else { this._ignore() }
+    if (this._isPreamble && this.listenerCount('preamble') !== 0) {
+      this.emit('preamble', this._part)
+    } else if (this._isPreamble !== true && this.listenerCount('part') !== 0) {
+      this.emit('part', this._part)
+    } else {
+      this._ignore()
+    }
     if (!this._isPreamble) { this._inHeader = true }
   }
   if (data && start < end && !this._ignoreData) {
@@ -30207,7 +30280,7 @@ function Multipart (boy, cfg) {
 
         ++nfiles
 
-        if (!boy._events.file) {
+        if (boy.listenerCount('file') === 0) {
           self.parser._ignore()
           return
         }
@@ -30736,7 +30809,7 @@ const decoders = {
     if (textDecoders.has(this.toString())) {
       try {
         return textDecoders.get(this).decode(data)
-      } catch (e) { }
+      } catch {}
     }
     return typeof data === 'string'
       ? data
@@ -31027,7 +31100,7 @@ var __webpack_exports__ = {};
 (() => {
 const cp = __nccwpck_require__(2081)
 const fs = __nccwpck_require__(7147)
-const github = __nccwpck_require__(8396)
+const github = __nccwpck_require__(3634)
 
 const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
 function findFile (tryPaths) {

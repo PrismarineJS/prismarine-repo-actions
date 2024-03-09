@@ -5,7 +5,7 @@ const { join } = require('path')
 globalThis.isMocha = true
 
 describe('commands work', () => {
-  const github = require('../src/github')
+  const github = require('gh-helpers')
   let commentCb
   github.onRepoComment = (fn) => {
     commentCb = fn
@@ -156,4 +156,11 @@ describe('build checks', function () {
       throw Error('dist/ is out of sync, run `npm run build`')
     }
   })
+})
+
+after(() => {
+  console.log('Done with tests, resetting test/ changes')
+  cp.execSync('git checkout history-in-readme-mock', { cwd: __dirname })
+  cp.execSync('git checkout normal', { cwd: __dirname })
+  cp.execSync('git checkout python', { cwd: __dirname })
 })
