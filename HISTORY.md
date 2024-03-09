@@ -1,5 +1,18 @@
 ## History
 
+### 1.3.1
+* [Move github-helper script to new `gh-helpers` package (#17)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/7cfb6bcd45613a5ad555463fe27d65eb441cc028) (thanks @extremeheat)
+* [node18 is not supported by gh action, switching to 20](https://github.com/PrismarineJS/prismarine-repo-actions/commit/bed432092fccc6168b9c29f005ff74d97c820166) (thanks @rom1504)
+* [Fix token type check, update options/doc (#16)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/c4c9ead22a191073f261a0ce40c067c1432d9cdb) (thanks @extremeheat)
+* [Bump @actions/github from 5.1.1 to 6.0.0 (#13)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/3bb43f87efaef757878d497e645020f6473a972b) (thanks @dependabot[bot])
+* [Bump @vercel/ncc from 0.36.1 to 0.38.1 (#14)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/815ae9ce1534d11643399a5774399e4fa9c9f3dd) (thanks @dependabot[bot])
+* [update build](https://github.com/PrismarineJS/prismarine-repo-actions/commit/4127e381c806ccb5fa8df95e3ddc944539bf83bb) (thanks @extremeheat)
+* [Fix default github_token usage](https://github.com/PrismarineJS/prismarine-repo-actions/commit/e37b4090dd4a3e98bdea0db5ac3ca8782eeaa3cb) (thanks @extremeheat)
+* [makerelease: reorder manifest lookup to fix another special case](https://github.com/PrismarineJS/prismarine-repo-actions/commit/095d42c3ab8dfe762e9656884df304073d86e32a) (thanks @extremeheat)
+* [makerelease: update manifest updating (#11)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/af035507315e9cfc7d7d7666e12483997c5b569f) (thanks @extremeheat)
+* [makerelease: update manifest update logic](https://github.com/PrismarineJS/prismarine-repo-actions/commit/9c1554bd6e981edfddfa7b52d2855c564f075616) (thanks @extremeheat)
+* [Fix space/quote handling when reading setup.py for release cmd](https://github.com/PrismarineJS/prismarine-repo-actions/commit/7d28e7904aa8a922d3c7913130930bb13410889c) (thanks @extremeheat)
+
 ### 1.3.0
 * [/fixrelease: use github API for recent commits to show Github usernames in history](https://github.com/PrismarineJS/prismarine-repo-actions/commit/797a7dac3052c94472a847b304a607063160d47b) (thanks @extremeheat)
 * [/makerelease: improve padding handling](https://github.com/PrismarineJS/prismarine-repo-actions/commit/85203d23c3dfea003404a843fb241515fc5f6041) (thanks @extremeheat)
