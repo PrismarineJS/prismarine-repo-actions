@@ -31561,14 +31561,40 @@ const commands = {
         resolve(true)
       })
     })
+  },
+  async review () {
+    const repoData = await github.getRepoDetails()
+    const diff = await github.getDiffForPR(this.triggerCommentId)
+    const payload = {
+      owner: 'extremeheat',
+      repo: 'llm-services',
+      workflow: 'dispatch.yml',
+      branch: 'main',
+      inputs: {
+        action: 'comments/review',
+        payload: JSON.stringify({
+          repo: repoData,
+          prData: await github.getPullRequest(this.triggerCommentId, true),
+          diff: diff.diff,
+          action: 'comment',
+          position: 'main',
+          commentBody: '/review'
+        })
+      }
+    }
+    console.log('Sending request to extremeheat/llm-services', payload)
+    const dispatch = await github.sendWorkflowDispatch(payload)
+    console.log('OK', dispatch)
   }
 }
+
+console.log('Commands', commands)
 
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }) => {
-  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
+github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, raw) => {
+  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor, raw)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
