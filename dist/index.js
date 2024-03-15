@@ -6223,6 +6223,15 @@ function mod (githubContext, githubToken) {
     })
   }
 
+  async function createPullRequestReview (id, payload) {
+    debug('createPullRequestReview', id, payload)
+    await octokit.rest.pulls.createReview({
+      ...context.repo,
+      pull_number: id,
+      ...payload
+    })
+  }
+
   async function addCommentReaction (commentId, reaction) {
     await octokit.rest.reactions.createForIssueComment({
       ...context.repo,
@@ -6346,6 +6355,8 @@ function mod (githubContext, githubToken) {
 
     updatePull,
     createPullRequest,
+    createPullRequestReview,
+
     close,
     comment,
     addCommentReaction,
@@ -6414,7 +6425,7 @@ const getRecentCommitsInRepo = () => [
     url: 'https://github.com/PrismarineJS/mineflayer/commit/c6e8aa895fd112876c0733f0b99bc3c2e3efc7c0'
   }
 ]
-module.exports = () => ({
+const mock = {
   mock: true,
   getRepoDetails: () => ({
     defaultBranch: 'main',
@@ -6442,6 +6453,7 @@ module.exports = () => ({
   getPullRequest,
   updatePull: noop,
   createPullRequest: noop,
+  createPullRequestReview: noop,
 
   close: console.log,
   comment: console.log,
@@ -6455,7 +6467,8 @@ module.exports = () => ({
   onUpdatedPR: noop,
   onWorkflowDispatch: noop,
   repoURL: 'https://github.com/' + process.env.GITHUB_REPOSITORY
-})
+}
+module.exports = () => mock
 
 
 /***/ }),
@@ -31346,7 +31359,7 @@ var __webpack_exports__ = {};
 (() => {
 const cp = __nccwpck_require__(2081)
 const fs = __nccwpck_require__(7147)
-const github = __nccwpck_require__(3634)
+const github = __nccwpck_require__(3634)()
 
 const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
 function findFile (tryPaths) {
