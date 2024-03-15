@@ -1,6 +1,6 @@
 const cp = require('child_process')
 const fs = require('fs')
-const github = require('gh-helpers')
+const github = require('gh-helpers')()
 
 const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
 function findFile (tryPaths) {
@@ -115,7 +115,7 @@ const commands = {
     // See if we already have an open issue, if so, update it
     let existingPR = this.existingPR
     if (!existingPR) {
-      const pr = await github.findPullRequest('Release ')
+      const pr = await github.findPullRequest({ titleIncludes: 'Release ' })
       if (pr) existingPR = pr.id
     }
 

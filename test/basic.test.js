@@ -5,7 +5,7 @@ const { join } = require('path')
 globalThis.isMocha = true
 
 describe('commands work', () => {
-  const github = require('gh-helpers')
+  const github = require('gh-helpers')()
   let commentCb
   github.onRepoComment = (fn) => {
     commentCb = fn
