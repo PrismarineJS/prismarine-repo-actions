@@ -115,7 +115,7 @@ const commands = {
     // See if we already have an open issue, if so, update it
     let existingPR = this.existingPR
     if (!existingPR) {
-      const pr = await github.findPullRequest('Release ')
+      const pr = await github.findPullRequest({ titleIncludes: 'Release ' })
       if (pr) existingPR = pr.id
     }
 
