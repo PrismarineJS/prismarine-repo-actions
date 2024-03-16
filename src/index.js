@@ -205,7 +205,6 @@ const commands = {
   },
   async review () {
     const repoData = await github.getRepoDetails()
-    const diff = await github.getDiffForPR(this.triggerIssueId)
     const payload = {
       owner: 'extremeheat',
       repo: 'llm-services',
@@ -215,8 +214,7 @@ const commands = {
         action: 'comments/review',
         payload: JSON.stringify({
           repo: repoData,
-          prData: await github.getPullRequest(this.triggerIssueId, true),
-          diff: diff.diff,
+          pr: this.triggerIssueId,
           action: 'comment',
           position: 'main',
           commentBody: '/review'
