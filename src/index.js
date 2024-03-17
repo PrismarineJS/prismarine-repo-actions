@@ -231,19 +231,16 @@ const commands = {
         })
       }
     }
-    console.log('Sending request to extremeheat/llm-services', payload)
-    const dispatch = await github.sendWorkflowDispatch(payload)
-    console.log('OK', dispatch)
+    console.log('Sending request', payload)
+    await github.sendWorkflowDispatch(payload)
   }
 }
-
-console.log('Commands', commands)
 
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
 github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, raw) => {
-  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor, raw)
+  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
