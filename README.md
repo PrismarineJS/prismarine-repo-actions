@@ -82,6 +82,11 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
     <td><code>"npm run fix"</code></td>
     <td>What command to use to fix the lint</td>
   </tr>
+  <tr>
+    <td>llm-services-repo</td>
+    <td><code>$currentOrganization/llm-services</code></td>
+    <td>What repository to use to send LLM requests to via dispatch. For example, `PrismarineJS/llm-services`. Defaults to the triggering repo's org's `llm-services` repo.</td>
+  </tr>
 </tbody>
 </table>
 
