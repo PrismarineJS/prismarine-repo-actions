@@ -204,10 +204,20 @@ const commands = {
     })
   },
   async review () {
+    let owner, repo
+    const servicesRepo = github.getInput('llm-services-repo')
+    if (servicesRepo) {
+      [owner, repo] = servicesRepo.split('/')
+    } else { // use the current org/llm-services
+      const slices = this.repository.svn_url.split('/') // https://github.com/owner/repo
+      slices.pop() // repo
+      owner = slices.pop()
+      repo = 'llm-services'
+    }
     const repoData = await github.getRepoDetails()
     const payload = {
-      owner: 'extremeheat',
-      repo: 'llm-services',
+      owner,
+      repo,
       workflow: 'dispatch.yml',
       branch: 'main',
       inputs: {
@@ -242,7 +252,7 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
       github.addCommentReaction(triggerCommentId, 'eyes')
       const isEnabled = github.getInput(`/${command.toLowerCase()}.enabled`)
       if (isEnabled == 'false') return // eslint-disable-line eqeqeq
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
+      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId, repository: raw.repository }, args)
     }
   }
 })
