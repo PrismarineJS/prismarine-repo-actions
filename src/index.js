@@ -213,6 +213,10 @@ const commands = {
       owner = _owner
       repo = 'llm-services'
     }
+    if (!await github.checkRepoExists([owner, repo])) {
+      await github.comment(this.triggerIssueId, 'Sorry, the /review command has not yet been configured for this repository.')
+      return
+    }
     const repoData = await github.getRepoDetails()
     const payload = {
       owner,
