@@ -33,7 +33,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^6.0.0",
-    "gh-helpers": "^0.2.3"
+    "gh-helpers": "^0.2.5"
   },
   "standard": {
     "ignore": [

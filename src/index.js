@@ -202,13 +202,47 @@ const commands = {
         resolve(true)
       })
     })
+  },
+  async review () {
+    let owner, repo
+    const servicesRepo = github.getInput('llm-services-repo')
+    if (servicesRepo) {
+      [owner, repo] = servicesRepo.split('/')
+    } else { // if user did not specify a repo, use the current calling org's llm-services repo
+      const [_owner] = this.repoId.split('/') // owner/repo
+      owner = _owner
+      repo = 'llm-services'
+    }
+    if (!await github.checkRepoExists([owner, repo])) {
+      await github.comment(this.triggerIssueId, 'Sorry, the /review command has not yet been configured for this repository.')
+      return
+    }
+    const repoData = await github.getRepoDetails()
+    const payload = {
+      owner,
+      repo,
+      workflow: 'dispatch.yml',
+      branch: 'main',
+      inputs: {
+        action: 'comments/review',
+        payload: JSON.stringify({
+          repo: repoData,
+          pr: this.triggerIssueId,
+          action: 'comment',
+          position: 'main',
+          commentBody: '/review'
+        })
+      }
+    }
+    console.log('Sending request', payload)
+    await github.sendWorkflowDispatch(payload)
   }
 }
 
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }) => {
+github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId, repository, repo }) => {
   console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(role), isAuthor)
   if (message.startsWith('/') && (WRITE_ROLES.includes(role) || isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
@@ -218,7 +252,19 @@ github.onRepoComment(({ type, body: message, role, isAuthor, triggerPullMerged, 
       github.addCommentReaction(triggerCommentId, 'eyes')
       const isEnabled = github.getInput(`/${command.toLowerCase()}.enabled`)
       if (isEnabled == 'false') return // eslint-disable-line eqeqeq
-      return handler.apply({ type, message, role, isAuthor, triggerPullMerged, triggerUser, triggerURL, triggerIssueId, triggerCommentId }, args)
+      return handler.apply({
+        repository,
+        repoId: repo,
+        type,
+        message,
+        role,
+        isAuthor,
+        triggerPullMerged,
+        triggerUser,
+        triggerURL,
+        triggerIssueId,
+        triggerCommentId
+      }, args)
     }
   }
 })
