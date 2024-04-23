@@ -21,14 +21,16 @@ describe('commands work', () => {
   it('/makerelease with no args', (done) => {
     process.chdir(join(__dirname, 'normal'))
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/makerelease',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       if (res) done()
       else done(Error('failed'))
@@ -38,14 +40,16 @@ describe('commands work', () => {
   it('/makerelease with args', (done) => {
     process.chdir(join(__dirname, 'normal'))
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/makerelease 2.0.0',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       if (res) done()
       else done(Error('failed'))
@@ -55,15 +59,18 @@ describe('commands work', () => {
   it('/makerelease with no perms', (done) => {
     process.chdir(join(__dirname, 'normal'))
     const shouldBeFalse = commentCb({
-      type: 'pr',
+      type: 'pull',
       role: '',
       body: '/makerelease 2.0.0',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: false
+      username: 'NOTsuperbot',
+      url: '',
+      isAuthor: false,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     })
+    console.log('Should be false', shouldBeFalse)
     if (shouldBeFalse) throw Error('failed')
     done()
   }).timeout(500)
@@ -71,14 +78,16 @@ describe('commands work', () => {
   it('/makerelease with history in README', (done) => {
     process.chdir(join(__dirname, 'history-in-readme-mock'))
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/makerelease 2.0.0',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       if (res) done()
       else done(Error('failed'))
@@ -88,14 +97,16 @@ describe('commands work', () => {
   it('/makerelease with python setup.py', (done) => {
     process.chdir(join(__dirname, 'python'))
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/makerelease 2.0.0',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       if (res) done()
       else done(Error('failed'))
@@ -104,14 +115,16 @@ describe('commands work', () => {
 
   it('/fixlint with no errors', (done) => {
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/fixlint',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       console.log('CB called')
       if (res) done()
@@ -122,14 +135,16 @@ describe('commands work', () => {
   it('/fixlint with expected errors', (done) => {
     fs.writeFileSync('broken.js', 'let x')
     commentCb({
-      type: 'pr',
+      type: 'pull',
       role: 'COLLABORATOR',
       body: '/fixlint',
-      triggerPullMerged: true,
-      issueUser: 'extremeheat',
-      triggerUser: 'extremeheat',
-      triggerURL: '',
-      isAuthor: true
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
     }).then((res) => {
       fs.rmSync('broken.js')
       if (res) {
