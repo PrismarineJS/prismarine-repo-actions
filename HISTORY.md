@@ -1,5 +1,11 @@
 ## History
 
+### 1.4.0
+* [Update for gh-helpers v0.3 (#24)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/cd94fb7c8d15b0c7870ece32096acebe85055b6f) (thanks @extremeheat)
+* [Add review command (#20)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/8a34d86a9129acb5991e1d904fb4cfffd17d12ca) (thanks @extremeheat)
+* [Bump gh-helpers from 0.1.3 to 0.2.2 (#23)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/29cf6d0ae0a48cb266c01b262beeb57180ea8a8d) (thanks @dependabot[bot])
+* [Bump gh-helpers from 0.0.1 to 0.1.2 (#19)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/98271383c7475c6d14f6317d06a70c8985993a59) (thanks @dependabot[bot])
+
 ### 1.3.1
 * [Move github-helper script to new `gh-helpers` package (#17)](https://github.com/PrismarineJS/prismarine-repo-actions/commit/7cfb6bcd45613a5ad555463fe27d65eb441cc028) (thanks @extremeheat)
 * [node18 is not supported by gh action, switching to 20](https://github.com/PrismarineJS/prismarine-repo-actions/commit/bed432092fccc6168b9c29f005ff74d97c820166) (thanks @rom1504)
