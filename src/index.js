@@ -4,7 +4,7 @@ const fs = require('fs')
 const github = require('gh-helpers')()
 
 const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
-function findFile(tryPaths) {
+function findFile (tryPaths) {
   const path = tryPaths.find(path => fs.existsSync(path))
   return [path, fs.readFileSync(path, 'utf-8')]
 }
@@ -14,7 +14,7 @@ const commands = {
    * Handles the `/makerelease [newVersion]` command
    * @this {import('gh-helpers').HookOnRepoCommentPayload}
    */
-  async makerelease([newVersion]) {
+  async makerelease ([newVersion]) {
     const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
     const maxListedCommits = parseInt(github.getInput('/makerelease.maxListedCommits')) || 32
 
@@ -145,7 +145,7 @@ const commands = {
    * Handles the `/fixlint` command
    * @this {import('gh-helpers').HookOnRepoCommentPayload}
    */
-  async fixlint() {
+  async fixlint () {
     if (this.type !== 'pull') return
     const installCommand = github.getInput('install-command') || 'npm install'
     const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
@@ -168,7 +168,7 @@ const commands = {
       return false
     }
 
-    function push() {
+    function push () {
       if (!prInfo.canMaintainerModify) throw new Error('Cannot push to PR as the author does not allow maintainers to modify it.')
       exec('git add --all')
       exec('git config user.name "github-actions[bot]"')
@@ -214,7 +214,7 @@ const commands = {
    * Handles the `/review` command
    * @this {import('gh-helpers').HookOnRepoCommentPayload}
    */
-  async review() {
+  async review () {
     if (this.type !== 'pull') return
     let owner, repo
     const servicesRepo = github.getInput('llm-services-repo')

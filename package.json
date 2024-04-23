@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "build": "ncc build",
-    "test": "mocha --reporter spec --exit",
+    "mocha": "mocha --reporter spec --exit",
+    "test": "npm run mocha",
     "pretest": "npm run lint",
     "lint": "standard",
     "fix": "standard --fix",
