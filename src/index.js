@@ -136,7 +136,7 @@ const commands = {
       console.log('Existing PR # is', existingPR)
       await github.updatePull(existingPR, { title })
     } else {
-      const body = `Triggered on behalf of ${this.username} in <a href="${this.url}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can rename this PR or run <code>/makerelease [version]</code> again to change the version.`
+      const body = `Triggered on behalf of ${this.username} in <a href="${this.url}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can run <code>/makerelease [version]</code> again to change the version.`
       await github.createPullRequest(title, body, branchName)
     }
     return true
