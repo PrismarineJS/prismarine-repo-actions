@@ -1,4 +1,5 @@
 // @ts-check
+/* eslint-disable no-empty-pattern */
 const cp = require('child_process')
 const fs = require('fs')
 const github = require('gh-helpers')()
@@ -248,6 +249,45 @@ const commands = {
     }
     console.log('Sending request', payload)
     await github.sendWorkflowDispatch(payload)
+  },
+  /**
+   * Handles the `/mergeonpass [retries] [mode: squash (default), merge, rebase]\n[custom commit message]` command
+   * @this {import('gh-helpers').HookOnRepoCommentPayload}
+   */
+  async mergeonpass ([], sargs) {
+    // wait for upto 10 minutes for the checks to pass
+    const MAX_WAIT = 10 * 60 * 1000
+    if (this.type !== 'pull') return
+    let retries = 0
+    /** @type {'squash' | 'merge' | 'rebase'} */
+    let mode = 'squash'
+    const [first, message] = sargs.split('\n')
+    if (first) {
+      const [_retries, _mode] = first.split(' ')
+      retries = parseInt(_retries) || 0
+      mode = _mode || 'squash'
+      if (!['squash', 'merge', 'rebase'].includes(mode)) {
+        return raise('Invalid merge mode, must be one of { squash, merge, rebase } set')
+      }
+    }
+    const prInfo = await github.getPullRequest(this.issue.number)
+    const checks = await github.getPullRequestChecks(prInfo.number)
+    console.log('PR Checks', checks)
+
+    do {
+      const waited = await github.waitForPullRequestChecks(prInfo.number, MAX_WAIT)
+      console.log('Waited for checks', waited)
+      if (waited.every(e => e.conclusion === 'success')) {
+        return await github.mergePullRequest(prInfo.number, { method: mode, title: message })
+      } else {
+        await github.retryPullRequestChecks(prInfo.number)
+        console.log('Retrying checks', retries)
+      }
+    } while (retries-- > 0)
+
+    async function raise (message) {
+      await github.comment(this.issue.number, message)
+    }
   }
 }
 

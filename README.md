@@ -99,4 +99,5 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
 * /fixlint
   * Run a lint fix command on the current PR, then push the update to the PR
   * [Example trigger](https://github.com/PrismarineJS/prismarine-repo-actions/pull/6)
-
+* `/mergeonpass [retries] [mode: squash (default), merge, rebase]\n[custom commit message]`
+  * Merge a pull request 
