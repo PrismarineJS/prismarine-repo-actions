@@ -89,7 +89,7 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   </tr>
   <tr>
     <td>/mergeonpass.maxWaitTime</td>
-    <td><code>600000 (1m)</code></td>
+    <td><code>600000</code> (20 min)</td>
     <td>How long to wait in milliseconds for the PR checks to pass (after retries) before giving up</td>
   </tr>
   <tr>
