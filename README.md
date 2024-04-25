@@ -83,6 +83,26 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
     <td>What command to use to fix the lint</td>
   </tr>
   <tr>
+    <td>/mergeonpass.enabled</td>
+    <td><code>true</code></td>
+    <td>Whether or not to enable the `/mergeonpass` command</td>
+  </tr>
+  <tr>
+    <td>/mergeonpass.maxWaitTime</td>
+    <td><code>600000 (1m)</code></td>
+    <td>How long to wait in milliseconds for the PR checks to pass (after retries) before giving up</td>
+  </tr>
+  <tr>
+    <td>/mergeonpass.defaultRetries</td>
+    <td><code>1</code></td>
+    <td>How many times to retry the PR checks on failure when waiting on merge, if the user does not specify in argument</td>
+  </tr>
+  <tr>
+    <td>/mergeonpass.defaultMode</td>
+    <td><code>squash</code></td>
+    <td>What merge mode to use by default, options are { squash, merge, rebase }, if the user does not specify in argument</td>
+  </tr>
+  <tr>
     <td>llm-services-repo</td>
     <td><code>$currentOrganization/llm-services</code></td>
     <td>What repository to use to send LLM requests to via dispatch. For example, `PrismarineJS/llm-services`. Defaults to the triggering repo's org's `llm-services` repo.</td>
@@ -99,4 +119,11 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
 * /fixlint
   * Run a lint fix command on the current PR, then push the update to the PR
   * [Example trigger](https://github.com/PrismarineJS/prismarine-repo-actions/pull/6)
-
+* `/mergeonpass [retries (default: 1)] [mode: squash (default), merge, rebase]\n[custom commit message]`
+  * Merge a pull request after tests pass, with n retries of failed tests.
+  * Merge a PR with 3 retries with standard merge mode, with the custom merge commit message "Merge this PR"
+    ```
+    /mergeonpass 3 merge
+    Merge this PR
+    ```
+  * [Example trigger](https://github.com/extremeheat/gh-helpers/pull/25)
