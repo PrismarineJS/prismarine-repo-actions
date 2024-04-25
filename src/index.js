@@ -256,7 +256,7 @@ const commands = {
    */
   async mergeonpass ([], sargs) {
     // wait for upto 10 minutes for the checks to pass by default
-    const MAX_WAIT = github.getInput('/mergeonpass.maxWaitTime') || 10 * 60 * 1000
+    const MAX_WAIT = github.getInput('/mergeonpass.maxWaitTime') || 20 * 60 * 1000
     const DEFAULT_RETRIES = github.getInput('/mergeonpass.defaultRetries') || 1
     const DEFAULT_MODE = github.getInput('/mergeonpass.defaultMode') || 'squash'
     if (this.type !== 'pull') return
@@ -292,6 +292,8 @@ const commands = {
         return raise(`Sorry, I couldn't merge the PR because some checks are in an unknown state.\n<pre>${JSON.stringify(waited, null, 2)}</pre>`)
       }
     } while (retries-- > 0)
+
+    return raise("Sorry, I couldn't merge the PR because some checks are still failing.")
 
     async function raise (message) {
       await github.comment(this.issue.number, message)
