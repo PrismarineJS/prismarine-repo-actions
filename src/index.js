@@ -1,5 +1,5 @@
 // @ts-check
-/* eslint-disable no-empty-pattern */
+/* eslint-disable no-empty-pattern, no-unreachable */
 const cp = require('child_process')
 const fs = require('fs')
 const github = require('gh-helpers')()
@@ -255,6 +255,12 @@ const commands = {
    * @this {import('gh-helpers').HookOnRepoCommentPayload}
    */
   async mergeonpass ([], sargs) {
+    return
+
+    if (!WRITE_ROLES.includes(this.role)) {
+      // Check again here for write role
+      return
+    }
     // wait for upto 10 minutes for the checks to pass by default
     const MAX_WAIT = github.getInput('/mergeonpass.maxWaitTime') || 20 * 60 * 1000
     const DEFAULT_RETRIES = github.getInput('/mergeonpass.defaultRetries') || 1
