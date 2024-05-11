@@ -310,9 +310,9 @@ const commands = {
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment((comment) => {
+github.onRepoComment((comment, raw) => {
   const message = comment.body
-  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(comment.role), comment)
+  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(comment.role), comment, raw)
   if (message.startsWith('/') && (WRITE_ROLES.includes(comment.role) || comment.isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
