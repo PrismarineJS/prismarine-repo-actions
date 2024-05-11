@@ -80,6 +80,11 @@ const commands = {
       x[1]++
       x[2] = 0
       newVersion = x.join('.')
+    } else if (newVersion === 'patch') {
+      const x = currentVersion.split('.')
+      x[2] ??= 0
+      x[2]++
+      newVersion = x.join('.')
     }
 
     const newHistoryLines = currentHistory.split('\n')
@@ -310,9 +315,9 @@ const commands = {
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-github.onRepoComment((comment, raw) => {
+github.onRepoComment((comment) => {
   const message = comment.body
-  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(comment.role), comment, raw)
+  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(comment.role), comment)
   if (message.startsWith('/') && (WRITE_ROLES.includes(comment.role) || comment.isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
