@@ -164,7 +164,7 @@ const commands = {
     } else {
       console.log('PR found', prInfo)
     }
-    exec(`git remote add fork ${prInfo.headCloneURL}`)
+    cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
     try {
