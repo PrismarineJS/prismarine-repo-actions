@@ -80,6 +80,11 @@ const commands = {
       x[1]++
       x[2] = 0
       newVersion = x.join('.')
+    } else if (newVersion === 'patch') {
+      const x = currentVersion.split('.')
+      x[2] ??= 0
+      x[2]++
+      newVersion = x.join('.')
     }
 
     const newHistoryLines = currentHistory.split('\n')
@@ -159,7 +164,7 @@ const commands = {
     } else {
       console.log('PR found', prInfo)
     }
-    exec(`git remote add fork ${prInfo.headCloneURL}`)
+    if (!github.mock) cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
     try {
