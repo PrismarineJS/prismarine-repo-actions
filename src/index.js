@@ -165,6 +165,7 @@ const commands = {
       console.log('PR found', prInfo)
     }
     exec(`echo 'url=https://git.example.com' | git credential reject`) // eslint-disable-line
+    exec('git config --unset http.https://github.com/.extraheader')
     exec(`git remote add fork ${prInfo.getHeadClonePatURL().replace('https://', 'https://username:')}`)
     exec(`git remote -v`)
     exec(`git config --list --show-origin`)
