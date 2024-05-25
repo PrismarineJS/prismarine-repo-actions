@@ -164,7 +164,7 @@ const commands = {
     } else {
       console.log('PR found', prInfo)
     }
-    exec(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
+    exec(`git remote add fork ${prInfo.getHeadClonePatURL().replace('https://', 'https://a')}`)
     exec(`git remote -v`)
     exec(`git config --list --show-origin`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
