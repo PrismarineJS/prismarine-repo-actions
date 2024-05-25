@@ -164,7 +164,9 @@ const commands = {
     } else {
       console.log('PR found', prInfo)
     }
-    if (!github.mock) cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
+    exec(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
+    exec(`git remote -v`)
+    exec(`git config --list --show-origin`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
     try {
