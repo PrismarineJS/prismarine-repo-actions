@@ -164,11 +164,8 @@ const commands = {
     } else {
       console.log('PR found', prInfo)
     }
-    exec(`echo 'url=https://git.example.com' | git credential reject`) // eslint-disable-line
     exec('git config --unset http.https://github.com/.extraheader')
-    exec(`git remote add fork ${prInfo.getHeadClonePatURL().replace('https://', 'https://username:')}`)
-    exec(`git remote -v`)
-    exec(`git config --list --show-origin`)
+    exec(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
     exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
     exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
     try {
@@ -201,19 +198,19 @@ const commands = {
         if (error) { // Non-zero exit code
           try {
             push()
-            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre>`)
+            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre>`)
             globalThis.__testingLintError = true // test marker
           } catch (e2) {
             console.log(e2)
-            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are errors still left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
+            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
           }
         } else {
           try {
             const ok = push()
-            await github.comment(this.issue.number, ok ? `I fixed all linting errors with <code>${lintCommand}</code>!` : 'No linting errors found.')
+            await github.comment(this.issue.number, ok ? `I fixed all linting errors with <code>${lintCommand}</code>.` : 'No linting errors found.')
           } catch (e) {
             console.log(e)
-            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code> which fixed the lint, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
+            await github.comment(this.issue.number, `I ran <code>${lintCommand}</code> which fixed the lint errors, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
           }
         }
         resolve(true)
