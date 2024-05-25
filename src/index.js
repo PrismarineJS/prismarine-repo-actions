@@ -166,7 +166,7 @@ const commands = {
     }
     exec(`echo 'url=https://git.example.com' | git credential reject`) // eslint-disable-line
     exec(`echo 'url=https://git.example.com' | git credential reject`) // eslint-disable-line
-    exec('mv ~/.ssh ~/.ssh-old')
+    exec('git config --global --list --show-origin')
     exec(`git remote add fork ${prInfo.getHeadClonePatURL().replace('https://', 'https://username:')}`)
     exec(`git remote -v`)
     exec(`git config --list --show-origin`)
