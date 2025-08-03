@@ -1,12 +1,18 @@
 // @ts-check
-/* eslint-disable no-empty-pattern, no-unreachable */
 const { WRITE_ROLES, github } = require('./utils')
-const commands = require('./commands')
 
-github.onRepoComment((comment) => {
+const commands = {
+  makerelease: require('./commands/makerelease'),
+  fixlint: require('./commands/fixlint'),
+  review: require('./commands/review'),
+  mergeonpass: require('./commands/mergeonpass')
+}
+
+github.onRepoComment((/** @type {import('gh-helpers').HookOnRepoCommentPayload & { authorHasWrite?: boolean }} */ comment) => {
   const message = comment.body
-  console.log('onRepoComment', message.startsWith('/'), WRITE_ROLES.includes(comment.role), comment)
-  if (message.startsWith('/') && (WRITE_ROLES.includes(comment.role) || comment.isAuthor)) {
+  comment.authorHasWrite = WRITE_ROLES.includes(comment.role)
+  console.log('onRepoComment', message.startsWith('/'), comment.authorHasWrite, comment)
+  if (message.startsWith('/') && (comment.authorHasWrite || comment.isAuthor)) {
     const [command, ...args] = message.slice(1).split(' ')
     const handler = commands[command.toLowerCase()]
     if (handler) {
@@ -15,7 +21,7 @@ github.onRepoComment((comment) => {
       const isEnabled = github.getInput(`/${command.toLowerCase()}.enabled`)
       if (handler.requiresExplicitEnable && isEnabled !== 'true') return
       if (isEnabled === 'false') return
-      return handler.apply(comment, [args, args.join(' ')])
+      return handler(comment, args, args.join(' '))
     }
   }
 })

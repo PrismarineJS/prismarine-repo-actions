@@ -1,11 +1,15 @@
 // @ts-check
-const { exec, findFile, github, fs } = require('../utils')
+const { exec, findFile, github } = require('../utils')
+const fs = require('fs')
 
 /**
  * Handles the `/makerelease [newVersion]` command
- * @this {import('gh-helpers').HookOnRepoCommentPayload}
+ * @param {import('gh-helpers').HookOnRepoCommentPayload} ctx
+ * @param {string[]} args
+ * @param {string} argStr
  */
-async function makerelease ([newVersion]) {
+async function makerelease (ctx, args, argStr) {
+  let [newVersion] = args
   const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
   const maxListedCommits = parseInt(github.getInput('/makerelease.maxListedCommits')) || 32
 
@@ -59,7 +63,7 @@ async function makerelease ([newVersion]) {
       }
     }
     if (!currentVersion) {
-      await github.comment(this.issue.number, "Sorry, I couldn't find the current version.")
+      await github.comment(ctx.issue.number, "Sorry, I couldn't find the current version.")
       return
     }
     console.log('Current version is', currentVersion)
@@ -81,7 +85,7 @@ async function makerelease ([newVersion]) {
   const latestCommits = await github.getRecentCommitsInRepo(maxListedCommits)
   console.log('Latest commits', latestCommits)
   if (!latestCommits.length) {
-    await github.comment(this.issue.number, "Sorry, I couldn't find any commits since the last release.")
+    await github.comment(ctx.issue.number, "Sorry, I couldn't find any commits since the last release.")
     return
   }
   const md = [`${newHistoryLines.some(l => l.startsWith('### ')) ? '###' : '##'} ${newVersion}`]
@@ -132,7 +136,7 @@ async function makerelease ([newVersion]) {
     console.log('Existing PR # is', existingPR)
     await github.updatePull(existingPR, { title })
   } else {
-    const body = `Triggered on behalf of ${this.username} in <a href="${this.url}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can run <code>/makerelease [version]</code> again to change the version.`
+    const body = `Triggered on behalf of ${ctx.username} in <a href="${ctx.url}">this comment</a>.\n\n<em>Note: Changes to the PR maybe needed to remove commits unrelated to library usage.</em>\n<hr/>🤖 I'm a bot. You can run <code>/makerelease [version]</code> again to change the version.`
     await github.createPullRequest(title, body, branchName)
   }
   return true

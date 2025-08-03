@@ -1,24 +1,24 @@
 // @ts-check
-const { WRITE_ROLES, github } = require('../utils')
+const { github } = require('../utils')
 
 /**
  * Handles the `/mergeonpass [retries] [mode: squash (default), merge, rebase]\n[custom commit message]` command
- * @this {import('gh-helpers').HookOnRepoCommentPayload}
+ * @param {import('gh-helpers').HookOnRepoCommentPayload & { authorHasWrite?: boolean }} ctx
+ * @param {string[]} args
+ * @param {string} argStr
  */
-async function mergeonpass (args, sargs) {
-  if (!WRITE_ROLES.includes(this.role)) {
-    // Check again here for write role
-    return
-  }
+async function mergeonpass (ctx, args, argStr) {
+  if (!ctx.authorHasWrite) return
+
   // wait for upto 10 minutes for the checks to pass by default
   const MAX_WAIT = parseInt(github.getInput('/mergeonpass.maxWaitTime')) || 20 * 60 * 1000
   const DEFAULT_RETRIES = parseInt(github.getInput('/mergeonpass.defaultRetries')) || 1
   let defaultMode = github.getInput('/mergeonpass.defaultMode') || 'squash'
   if (!['squash', 'merge', 'rebase'].includes(defaultMode)) defaultMode = 'squash'
-  if (this.type !== 'pull') return
+  if (ctx.type !== 'pull') return
   let retries = DEFAULT_RETRIES
   let mode = defaultMode
-  const [first, message] = sargs.split('\n')
+  const [first, message] = argStr.split('\n')
   if (first) {
     const [_retries, _mode] = first.split(' ')
     retries = parseInt(_retries) || retries
@@ -27,7 +27,7 @@ async function mergeonpass (args, sargs) {
       return raise('Invalid merge mode, must be one of { squash, merge, rebase } set')
     }
   }
-  const prInfo = await github.getPullRequest(this.issue.number)
+  const prInfo = await github.getPullRequest(ctx.issue.number)
   const checks = await github.getPullRequestChecks(prInfo.number)
   console.log('PR Checks', checks)
   if (!checks.length) {
@@ -39,7 +39,7 @@ async function mergeonpass (args, sargs) {
     const waited = await github.waitForPullRequestChecks(prInfo.number, MAX_WAIT)
     console.log('Waited for checks', waited)
     if (waited.every(e => e.conclusion === 'success')) {
-      return await github.mergePullRequest(prInfo.number, { method: mode, title: message })
+      return await github.mergePullRequest(prInfo.number, { method: /** @type {'squash' | 'merge' | 'rebase'} */ (mode), title: message })
     } else if (waited.some(e => e.conclusion === 'failure')) {
       await github.retryPullRequestChecks(prInfo.number)
       console.log('Retrying checks', retries)
@@ -51,7 +51,7 @@ async function mergeonpass (args, sargs) {
   return raise("Sorry, I couldn't merge the PR because some checks are still failing.")
 
   async function raise (message) {
-    await github.comment(this.issue.number, message)
+    await github.comment(ctx.issue.number, message)
   }
 }
 

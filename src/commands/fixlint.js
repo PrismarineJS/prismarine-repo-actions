@@ -1,19 +1,22 @@
 // @ts-check
-const { exec, github, cp } = require('../utils')
+const cp = require('child_process')
+const { exec, github } = require('../utils')
 
 /**
  * Handles the `/fixlint` command
- * @this {import('gh-helpers').HookOnRepoCommentPayload}
+ * @param {import('gh-helpers').HookOnRepoCommentPayload} ctx
+ * @param {string[]} args
+ * @param {string} argStr
  */
-async function fixlint () {
-  if (this.type !== 'pull') return
+async function fixlint (ctx, args, argStr) {
+  if (ctx.type !== 'pull') return
   const installCommand = github.getInput('install-command') || 'npm install'
   const lintCommand = github.getInput('/fixlint.fix-command') || 'npm run fix'
 
-  const prInfo = await github.getPullRequest(this.issue.number)
+  const prInfo = await github.getPullRequest(ctx.issue.number)
 
   if (!prInfo) {
-    console.log('PR not found', this.issue.number)
+    console.log('PR not found', ctx.issue.number)
     return false
   } else {
     console.log('PR found', prInfo)
@@ -25,7 +28,7 @@ async function fixlint () {
   try {
     exec(installCommand)
   } catch (e) {
-    await github.comment(this.issue.number, `Sorry, I wasn't able to use the <code>${installCommand}</code> command to install the project because of an error.`)
+    await github.comment(ctx.issue.number, `Sorry, I wasn't able to use the <code>${installCommand}</code> command to install the project because of an error.`)
     return false
   }
 
@@ -52,19 +55,19 @@ async function fixlint () {
       if (error) { // Non-zero exit code
         try {
           push()
-          await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre>`)
+          await github.comment(ctx.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre>`)
           globalThis.__testingLintError = true // test marker
         } catch (e2) {
           console.log(e2)
-          await github.comment(this.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
+          await github.comment(ctx.issue.number, `I ran <code>${lintCommand}</code>, but there are still some linting errors left that must be manually resolved:\n<pre>${log}</pre> As the PR author didn't grant write permissions to the maintainers, the PR author must run <code>${lintCommand}</code> and manually fix the remaining errors.`)
         }
       } else {
         try {
           const ok = push()
-          await github.comment(this.issue.number, ok ? `I fixed all linting errors with <code>${lintCommand}</code>.` : 'No linting errors found.')
+          await github.comment(ctx.issue.number, ok ? `I fixed all linting errors with <code>${lintCommand}</code>.` : 'No linting errors found.')
         } catch (e) {
           console.log(e)
-          await github.comment(this.issue.number, `I ran <code>${lintCommand}</code> which fixed the lint errors, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
+          await github.comment(ctx.issue.number, `I ran <code>${lintCommand}</code> which fixed the lint errors, but I couldn't push the changes to this branch as the PR author didn't grant write permissions to the maintainers. The PR author must manually run <code>${lintCommand}</code> and push the changes.`)
         }
       }
       resolve(true)

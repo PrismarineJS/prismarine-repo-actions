@@ -13,11 +13,4 @@ function findFile (tryPaths) {
 // Roles are listed in https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#issue_comment
 const WRITE_ROLES = ['COLLABORATOR', 'MEMBER', 'OWNER']
 
-module.exports = {
-  exec,
-  findFile,
-  WRITE_ROLES,
-  github,
-  cp,
-  fs
-}
+module.exports = { exec, findFile, WRITE_ROLES, github }
