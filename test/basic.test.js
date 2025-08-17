@@ -161,8 +161,8 @@ describe('build checks', function () {
   it('build is up to date', function () {
     this.timeout(5000 * 2)
     cp.execSync('npm run build -- -o test')
-    const a = fs.readFileSync('test/index.js', 'utf-8').replaceAll('\r', '').replaceAll('\n', '')
-    const b = fs.readFileSync('dist/index.js', 'utf-8').replaceAll('\r', '').replaceAll('\n', '')
+    const a = fs.readFileSync('test/index.js', 'utf-8').replaceAll('\r', '')
+    const b = fs.readFileSync('dist/index.js', 'utf-8').replaceAll('\r', '')
     if (a === b) {
       fs.rmSync('test/index.js')
     } else {
