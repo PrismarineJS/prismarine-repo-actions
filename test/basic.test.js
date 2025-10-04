@@ -155,6 +155,63 @@ describe('commands work', () => {
       }
     })
   }).timeout(6000)
+
+  it('/ai with prompt', (done) => {
+    commentCb({
+      type: 'pull',
+      role: 'COLLABORATOR',
+      body: '/ai fix the tests',
+      username: 'superbot',
+      url: 'https://github.com/test/repo/pull/1#issuecomment-123',
+      isAuthor: true,
+      issue: {
+        number: 1,
+        author: 'superbot',
+        isMerged: false
+      }
+    }).then((res) => {
+      if (res) done()
+      else done(Error('failed'))
+    }).catch(console.error)
+  }).timeout(500)
+
+  it('/ai with no prompt', (done) => {
+    commentCb({
+      type: 'pull',
+      role: 'COLLABORATOR',
+      body: '/ai',
+      username: 'superbot',
+      url: 'https://github.com/test/repo/pull/1#issuecomment-123',
+      isAuthor: true,
+      issue: {
+        number: 1,
+        author: 'superbot',
+        isMerged: false
+      }
+    }).then((res) => {
+      if (!res) done()
+      else done(Error('should have failed with no prompt'))
+    }).catch(console.error)
+  }).timeout(500)
+
+  it('/ai with no perms', (done) => {
+    const shouldBeFalse = commentCb({
+      type: 'pull',
+      role: '',
+      body: '/ai fix the tests',
+      username: 'NOTsuperbot',
+      url: 'https://github.com/test/repo/pull/1#issuecomment-123',
+      isAuthor: false,
+      issue: {
+        number: 1,
+        author: 'superbot',
+        isMerged: false
+      }
+    })
+    console.log('Should be false', shouldBeFalse)
+    if (shouldBeFalse) throw Error('failed')
+    done()
+  }).timeout(500)
 })
 
 describe('build checks', function () {
