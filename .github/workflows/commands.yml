@@ -13,9 +13,9 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v3
       with:
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.PAT_PASSWORD }}
 #     - uses: hmarr/debug-action@v2
     - name: Run command handlers
       uses: PrismarineJS/prismarine-repo-actions@master
       with:
-        token: ${{ secrets.PAT_TOKEN }}
+        token: ${{ secrets.PAT_PASSWORD }}

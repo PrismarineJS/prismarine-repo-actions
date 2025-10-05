@@ -63,6 +63,11 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
     <td>What command to run to install the repo if the command requires installing it</td>
   </tr>
   <tr>
+    <td>/ai.enabled</td>
+    <td><code>true</code></td>
+    <td>Whether or not to enable the `/ai` command</td>
+  </tr>
+  <tr>
     <td>/makerelease.enabled</td>
     <td><code>true</code></td>
     <td>Whether or not to enable the `/makerelease` command</td>
@@ -111,6 +116,12 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
 </table>
 
 ## Commands
+* /ai <prompt>
+  * Create a GitHub Copilot Agent task to work on an issue or pull request
+  * The command automatically includes the PR/issue URL as context
+  * For PRs where both source and target branches are in the same repo, the agent will work on the source branch
+  * Example: `/ai fix the failing tests`
+  * Example: `/ai add documentation for the new feature`
 * /makerelease [release version]
   * Make a release PR (Node.js and Python projects) on projects that have a HISTORY.md file like [this](https://github.com/PrismarineJS/mineflayer/blob/master/docs/history.md)
   * This command creates a new PR with a modified HISTORY.md adding a section with the latest commits since the last release and if they exist, updates the package.json (Node.js) or setup.py/pyproject.toml (Python) manifest files.

@@ -3,7 +3,8 @@ const { WRITE_ROLES, github } = require('./utils')
 
 const commands = {
   makerelease: require('./commands/makerelease'),
-  fixlint: require('./commands/fixlint')
+  fixlint: require('./commands/fixlint'),
+  ai: require('./commands/ai')
 }
 
 github.onRepoComment((/** @type {import('gh-helpers').HookOnRepoCommentPayload & { authorHasWrite?: boolean }} */ comment) => {
