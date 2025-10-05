@@ -13,22 +13,17 @@ async function ai (ctx, args, argStr) {
     return false
   }
 
-  let prompt = argStr
+  const prompt = `Related: ${ctx.issue.url}\n\n${argStr}`
   let branch
 
   // If this is a PR, add the PR URL as context
   if (ctx.type === 'pull') {
     const prInfo = await github.getPullRequest(ctx.issue.number)
-
     if (!prInfo) {
       console.log('PR not found', ctx.issue.number)
       await github.comment(ctx.issue.number, 'Sorry, I could not retrieve the pull request information.')
       return false
     }
-
-    // Add PR URL as context
-    prompt = `Related: ${prInfo.url}.\n${argStr}`
-
     // Check if both source and target branches are in the same repo
     if (prInfo.targetRepo === prInfo.headRepo) {
       // Use the source branch (head branch)
@@ -38,7 +33,7 @@ async function ai (ctx, args, argStr) {
   }
 
   try {
-    console.log(`Creating agent task with prompt: ${prompt}`)
+    console.log(`Creating agent task with prompt [${prompt}]`)
     if (branch) {
       console.log(`On branch: ${branch}`)
     }
