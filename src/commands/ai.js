@@ -39,7 +39,8 @@ async function ai (ctx, args, argStr) {
     }
 
     const result = await github.createAgent(prompt, branch)
-    console.log('Agent task created:', result)
+    console.dir(result, { depth: null })
+    console.log('Agent task created')
 
     await github.comment(ctx.issue.number, '✅ Agent task created successfully!')
     return true
