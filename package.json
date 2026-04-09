@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "@actions/github": "^6.0.0",
+    "@actions/github": "^9.1.0",
     "gh-helpers": "extremeheat/gh-helpers"
   },
   "standard": {
