@@ -9,24 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
     - name: Set up Node.js
-      uses: actions/setup-node@master
+      uses: actions/setup-node@v4
       with:
         node-version: 22.0.0
     - id: publish
-      uses: JS-DevTools/npm-publish@v1
+      uses: JS-DevTools/npm-publish@v3
       with:
         token: ${{ secrets.NPM_AUTH_TOKEN }}
     - name: Create Release
       if: steps.publish.outputs.type != 'none'
-      id: create_release
-      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.publish.outputs.version }}
-        release_name: Release ${{ steps.publish.outputs.version }}
-        body: ${{ steps.publish.outputs.version }}
-        draft: false
-        prerelease: false
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release create "${{ steps.publish.outputs.version }}" --title "Release ${{ steps.publish.outputs.version }}" --notes "${{ steps.publish.outputs.version }}"

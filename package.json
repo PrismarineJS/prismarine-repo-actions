@@ -14,18 +14,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PrismarineJS/prismarine-template.git"
+    "url": "git+https://github.com/PrismarineJS/prismarine-repo-actions.git"
   },
   "keywords": [
     "prismarine",
-    "template"
+    "github-actions"
   ],
   "author": "extremeheat",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/PrismarineJS/prismarine-template/issues"
+    "url": "https://github.com/PrismarineJS/prismarine-repo-actions/issues"
   },
-  "homepage": "https://github.com/PrismarineJS/prismarine-template#readme",
+  "homepage": "https://github.com/PrismarineJS/prismarine-repo-actions#readme",
   "devDependencies": {
     "@vercel/ncc": "^0.38.3",
     "mocha": "^11.7.5",

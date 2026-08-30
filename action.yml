@@ -7,6 +7,9 @@ inputs:
   install-command:
     description: What command to run to install the repo if the command requires installing it
     required: false
+  /ai.enabled:
+    description: Whether to enable the `/ai` command (off by default)
+    required: false
   /makerelease.enabled:
     description: Whether to enable the `/makerelease` command
     required: false
@@ -14,10 +17,16 @@ inputs:
     description: When looking back through all the commits until the most recent release, what separator to stop at
     required: false
   /fixlint.enabled:
-    description: Whether or not to enable the `/fixlint` command
+    description: Whether to enable the `/fixlint` command (off by default, it runs PR code with the token)
     required: false
   /fixlint.fix-command:
     description: What command to use to fix the lint
+    required: false
+  /mergeonpass.enabled:
+    description: Whether to enable the `/mergeonpass` command (off by default)
+    required: false
+  /review.enabled:
+    description: Whether to enable the `/review` command (off by default)
     required: false
 runs:
   using: node20

@@ -43,4 +43,6 @@ async function review (ctx, args, argStr) {
   await github.sendWorkflowDispatch(payload)
 }
 
+review.requiresExplicitEnable = true
+
 module.exports = review

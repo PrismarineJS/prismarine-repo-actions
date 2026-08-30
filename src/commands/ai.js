@@ -51,4 +51,6 @@ async function ai (ctx, args, argStr) {
   }
 }
 
+ai.requiresExplicitEnable = true
+
 module.exports = ai

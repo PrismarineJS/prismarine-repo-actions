@@ -10,6 +10,7 @@ describe('commands work', () => {
   github.onRepoComment = (fn) => {
     commentCb = fn
   }
+  github.getInput = (name) => ['/ai.enabled', '/fixlint.enabled'].includes(name) ? 'true' : ''
   require('../src/index')
   cp.execSync(`git checkout ${__dirname}/history-in-readme-mock ${__dirname}/normal`) // eslint-disable-line
 
@@ -73,6 +74,42 @@ describe('commands work', () => {
     console.log('Should be false', shouldBeFalse)
     if (shouldBeFalse) throw Error('failed')
     done()
+  }).timeout(500)
+
+  it('/fixlint as PR author without write access', (done) => {
+    const shouldBeFalse = commentCb({
+      type: 'pull',
+      role: 'NONE',
+      body: '/fixlint',
+      username: 'attacker',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'attacker',
+        isMerged: false
+      }
+    })
+    if (shouldBeFalse) throw Error('failed')
+    done()
+  }).timeout(500)
+
+  it('/makerelease with invalid version', (done) => {
+    process.chdir(join(__dirname, 'normal'))
+    commentCb({
+      type: 'pull',
+      role: 'COLLABORATOR',
+      body: '/makerelease $(id)',
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
+    }).then((res) => {
+      if (res) done(Error('should have rejected version'))
+      else done()
+    }).catch(console.error)
   }).timeout(500)
 
   it('/makerelease with history in README', (done) => {
