@@ -10,6 +10,10 @@ const fs = require('fs')
  */
 async function makerelease (ctx, args, argStr) {
   let [newVersion] = args
+  if (newVersion && !['major', 'minor', 'patch'].includes(newVersion) && !/^\d+\.\d+\.\d+$/.test(newVersion)) {
+    await github.comment(ctx.issue.number, `Sorry, \`${newVersion}\` is not a valid version. Usage: \`/makerelease [x.y.z | major | minor | patch]\``)
+    return false
+  }
   const releaseSeparator = github.getInput('/makerelease.releaseCommitsStartWith') || 'Release '
   const maxListedCommits = parseInt(github.getInput('/makerelease.maxListedCommits')) || 32
 
@@ -53,7 +57,7 @@ async function makerelease (ctx, args, argStr) {
       if (line.startsWith('#')) {
         const header = line.split('# ')[1]?.trim()
         if (!header) continue
-        if (header[0] === 'v' && header[1].isNumeric()) {
+        if (header[0] === 'v' && !isNaN(header[1])) {
           currentVersion = header.slice(1)
           break
         } else if (!isNaN(header[0])) {
@@ -69,16 +73,11 @@ async function makerelease (ctx, args, argStr) {
     console.log('Current version is', currentVersion)
   }
 
-  if (!newVersion) {
-    const x = currentVersion.split('.')
-    x[1]++
-    x[2] = 0
-    newVersion = x.join('.')
-  } else if (newVersion === 'patch') {
-    const x = currentVersion.split('.')
-    x[2] ??= 0
-    x[2]++
-    newVersion = x.join('.')
+  if (!newVersion || ['major', 'minor', 'patch'].includes(newVersion)) {
+    const [major, minor, patch] = currentVersion.split('.').map(v => parseInt(v) || 0)
+    if (newVersion === 'major') newVersion = `${major + 1}.0.0`
+    else if (newVersion === 'patch') newVersion = `${major}.${minor}.${patch + 1}`
+    else newVersion = `${major}.${minor + 1}.0`
   }
 
   const newHistoryLines = currentHistory.split('\n')

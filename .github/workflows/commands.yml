@@ -3,15 +3,13 @@ name: Comment Commands
 on:
   issue_comment:        # Handle comment commands
     types: [created]
-  pull_request_target:  # Handle renamed PRs
-    types: [edited]
 
 jobs:
   comment-trigger:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.PAT_PASSWORD }}
 #     - uses: hmarr/debug-action@v2

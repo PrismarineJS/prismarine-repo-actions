@@ -5,7 +5,7 @@
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/PrismarineJS)](https://github.com/sponsors/PrismarineJS)\
 [![Official Discord](https://img.shields.io/static/v1.svg?label=PrismarineJS&message=Discord&color=blue&logo=discord)](https://discord.gg/GsEFRM8)
 
-Github Action for automating repo actions via issue/PR comment commands. To run the commands on a PR, the user must be the PR author or a repo *COLLABORATOR*, *MEMBER*, or *OWNER*.
+Github Action for automating repo actions via issue/PR comment commands. To run a command, the commenter must be a repo *COLLABORATOR*, *MEMBER*, or *OWNER*. PR authors without write access cannot run commands, since several commands execute code from the PR branch with the workflow token.
 
 ## Install
 Add a workflow looking like this in `.github/workflows/comments.yml`:
@@ -18,8 +18,6 @@ name: Repo Commands
 on:
   issue_comment:        # Handle comment commands
     types: [created]
-  pull_request_target:  # Handle renamed PRs
-    types: [edited]
 
 # NOTE: You must use a Personal Access Token (PAT) with repo access. While you can use the default GITHUB_TOKEN,
 # actions taken with it will not trigger other actions, so if you have a CI workflow, commits created by this action will not trigger it.
@@ -28,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.PAT_TOKEN }}
     - name: Run command handlers
@@ -37,7 +35,6 @@ jobs:
         token: ${{ secrets.PAT_TOKEN }}
         # See `Options` section below for more info on these options
         install-command: npm install
-        /fixlint.fix-command: npm run fix
 ```
 
 Commands can be enabled/disabled by setting the `/$command.enabled` property to `true` or `false`.
@@ -64,8 +61,8 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   </tr>
   <tr>
     <td>/ai.enabled</td>
-    <td><code>true</code></td>
-    <td>Whether or not to enable the `/ai` command</td>
+    <td><code>false</code></td>
+    <td>Whether or not to enable the `/ai` command. Off by default as it creates Copilot agent tasks with the workflow token.</td>
   </tr>
   <tr>
     <td>/makerelease.enabled</td>
@@ -79,8 +76,8 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   </tr>
   <tr>
     <td>/fixlint.enabled</td>
-    <td><code>true</code></td>
-    <td>Whether or not to enable the `/fixlint` command</td>
+    <td><code>false</code></td>
+    <td>Whether or not to enable the `/fixlint` command. Off by default as it runs the PR branch's install and lint-fix scripts on the runner with the workflow token, so anyone with write access can extract the token via a PR.</td>
   </tr>
   <tr>
     <td>/fixlint.fix-command</td>
@@ -89,7 +86,7 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   </tr>
   <tr>
     <td>/mergeonpass.enabled</td>
-    <td><code>true</code></td>
+    <td><code>false</code></td>
     <td>Whether or not to enable the `/mergeonpass` command</td>
   </tr>
   <tr>
@@ -108,6 +105,11 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
     <td>What merge mode to use by default, options are { squash, merge, rebase }, if the user does not specify in argument</td>
   </tr>
   <tr>
+    <td>/review.enabled</td>
+    <td><code>false</code></td>
+    <td>Whether or not to enable the `/review` command</td>
+  </tr>
+  <tr>
     <td>llm-services-repo</td>
     <td><code>$currentOrganization/llm-services</code></td>
     <td>What repository to use to send LLM requests to via dispatch. For example, `PrismarineJS/llm-services`. Defaults to the triggering repo's org's `llm-services` repo.</td>
@@ -122,12 +124,12 @@ Commands can be enabled/disabled by setting the `/$command.enabled` property to 
   * For PRs where both source and target branches are in the same repo, the agent will work on the source branch
   * Example: `/ai fix the failing tests`
   * Example: `/ai add documentation for the new feature`
-* /makerelease [release version]
+* /makerelease [x.y.z | major | minor (default) | patch]
   * Make a release PR (Node.js and Python projects) on projects that have a HISTORY.md file like [this](https://github.com/PrismarineJS/mineflayer/blob/master/docs/history.md)
   * This command creates a new PR with a modified HISTORY.md adding a section with the latest commits since the last release and if they exist, updates the package.json (Node.js) or setup.py/pyproject.toml (Python) manifest files.
   * *This doesn't actually create a release, it just creates a PR that when merged, should trigger your actual release workflow.* You can modify the generated changelog as needed.
   * [Example trigger](https://github.com/PrismarineJS/prismarine-repo-actions/pull/6) and [resulting release PR](https://github.com/PrismarineJS/prismarine-repo-actions/pull/7)
-* /fixlint
+* /fixlint (off by default, see Options)
   * Run a lint fix command on the current PR, then push the update to the PR
   * [Example trigger](https://github.com/PrismarineJS/prismarine-repo-actions/pull/6)
 * `/mergeonpass [retries (default: 1)] [mode: squash (default), merge, rebase]\n[custom commit message]`

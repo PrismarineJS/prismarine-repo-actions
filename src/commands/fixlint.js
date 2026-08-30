@@ -21,8 +21,19 @@ async function fixlint (ctx, args, argStr) {
   } else {
     console.log('PR found', prInfo)
   }
+  // The branch name is interpolated into shell commands below, so refuse anything unusual
+  if (!/^[\w./-]+$/.test(prInfo.headBranch)) {
+    await github.comment(ctx.issue.number, `Sorry, I can't work with the branch name \`${prInfo.headBranch}\`.`)
+    return false
+  }
   exec('git config --unset http.https://github.com/.extraheader')
-  if (!github.mock) cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`)
+  if (!github.mock) {
+    try {
+      cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`, { stdio: 'ignore' })
+    } catch (e) {
+      throw new Error('git remote add fork failed') // don't rethrow, the original error message contains the token
+    }
+  }
   exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
   exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
   try {
@@ -74,5 +85,7 @@ async function fixlint (ctx, args, argStr) {
     })
   })
 }
+
+fixlint.requiresExplicitEnable = true
 
 module.exports = fixlint
