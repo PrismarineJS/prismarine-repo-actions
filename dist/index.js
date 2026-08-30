@@ -95028,23 +95028,19 @@ async function fixlint (ctx, args, argStr) {
   } else {
     console.log('PR found', prInfo)
   }
-  // The branch name is interpolated into shell commands below, so refuse anything unusual
-  if (!/^[\w./-]+$/.test(prInfo.headBranch)) {
-    await github.comment(ctx.issue.number, `Sorry, I can't work with the branch name \`${prInfo.headBranch}\`.`)
-    return false
-  }
-  exec('git config --unset http.https://github.com/.extraheader')
+  exec('git', ['config', '--unset', 'http.https://github.com/.extraheader'])
   if (!github.mock) {
     try {
-      cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`, { stdio: 'ignore' })
+      cp.execFileSync('git', ['remote', 'add', 'fork', prInfo.getHeadClonePatURL()], { stdio: 'ignore' })
     } catch (e) {
       throw new Error('git remote add fork failed') // don't rethrow, the original error message contains the token
     }
   }
-  exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
-  exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
+  exec('git', ['fetch', 'fork', prInfo.headBranch, '--depth=1'])
+  exec('git', ['checkout', '-b', 'bot-fixed-lint', `fork/${prInfo.headBranch}`])
   try {
-    exec(installCommand)
+    console.log('> ', installCommand)
+    if (!github.mock) cp.execSync(installCommand, { stdio: 'inherit' })
   } catch (e) {
     await github.comment(ctx.issue.number, `Sorry, I wasn't able to use the <code>${installCommand}</code> command to install the project because of an error.`)
     return false
@@ -95052,16 +95048,16 @@ async function fixlint (ctx, args, argStr) {
 
   function push () {
     if (!prInfo.canMaintainerModify) throw new Error('Cannot push to PR as the author does not allow maintainers to modify it.')
-    exec('git add --all')
-    exec('git config user.name "github-actions[bot]"')
-    exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
+    exec('git', ['add', '--all'])
+    exec('git', ['config', 'user.name', 'github-actions[bot]'])
+    exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
     try {
-      exec('git commit -m "Fix linting errors"')
+      exec('git', ['commit', '-m', 'Fix linting errors'])
     } catch (e) {
       console.log('(No changes to commit!)')
       return false
     }
-    exec('git push fork bot-fixed-lint:' + prInfo.headBranch)
+    exec('git', ['push', 'fork', `bot-fixed-lint:${prInfo.headBranch}`])
     return true
   }
 
@@ -95123,8 +95119,8 @@ async function makerelease (ctx, args, argStr) {
   const maxListedCommits = parseInt(github.getInput('/makerelease.maxListedCommits')) || 32
 
   const defaultBranch = await github.getDefaultBranch()
-  exec(`git fetch origin ${defaultBranch} --depth 16`)
-  exec(`git checkout ${defaultBranch}`)
+  exec('git', ['fetch', 'origin', defaultBranch, '--depth', '16'])
+  exec('git', ['checkout', defaultBranch])
 
   let historyPath, currentHistory, historyInsertionIndex
   try {
@@ -95228,13 +95224,13 @@ async function makerelease (ctx, args, argStr) {
 
   // Having one branch managed by the bot prevents alot of problems (opposed to branch per version)
   const branchName = 'rel-actions-bot' // 'rel-' + Buffer.from(newVersion, 'ascii').toString('hex')
-  exec(`git update-ref -d refs/heads/${branchName}`) // delete any existing branch
-  exec(`git checkout -b ${branchName}`)
-  exec('git add --all')
-  exec('git config user.name "github-actions[bot]"')
-  exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
-  exec(`git commit -m "${releaseSeparator}${newVersion}"`)
-  exec(`git push origin ${branchName} --force`)
+  exec('git', ['update-ref', '-d', `refs/heads/${branchName}`]) // delete any existing branch
+  exec('git', ['checkout', '-b', branchName])
+  exec('git', ['add', '--all'])
+  exec('git', ['config', 'user.name', 'github-actions[bot]'])
+  exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
+  exec('git', ['commit', '-m', `${releaseSeparator}${newVersion}`])
+  exec('git', ['push', 'origin', branchName, '--force'])
   const title = `Release ${newVersion}`
   if (existingPR) {
     console.log('Existing PR # is', existingPR)
@@ -95381,7 +95377,11 @@ const cp = __nccwpck_require__(35317)
 const fs = __nccwpck_require__(79896)
 const github = __nccwpck_require__(48962)()
 
-const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
+// Runs a program directly (no shell), so arguments are never interpreted by a shell
+const exec = (file, args = []) => {
+  console.log('> ', file, ...args)
+  if (!github.mock) cp.execFileSync(file, args, { stdio: 'inherit' })
+}
 
 function findFile (tryPaths) {
   const path = tryPaths.find(path => fs.existsSync(path))

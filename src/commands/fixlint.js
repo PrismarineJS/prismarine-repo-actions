@@ -21,23 +21,19 @@ async function fixlint (ctx, args, argStr) {
   } else {
     console.log('PR found', prInfo)
   }
-  // The branch name is interpolated into shell commands below, so refuse anything unusual
-  if (!/^[\w./-]+$/.test(prInfo.headBranch)) {
-    await github.comment(ctx.issue.number, `Sorry, I can't work with the branch name \`${prInfo.headBranch}\`.`)
-    return false
-  }
-  exec('git config --unset http.https://github.com/.extraheader')
+  exec('git', ['config', '--unset', 'http.https://github.com/.extraheader'])
   if (!github.mock) {
     try {
-      cp.execSync(`git remote add fork ${prInfo.getHeadClonePatURL()}`, { stdio: 'ignore' })
+      cp.execFileSync('git', ['remote', 'add', 'fork', prInfo.getHeadClonePatURL()], { stdio: 'ignore' })
     } catch (e) {
       throw new Error('git remote add fork failed') // don't rethrow, the original error message contains the token
     }
   }
-  exec(`git fetch fork ${prInfo.headBranch} --depth=1`)
-  exec(`git checkout -b bot-fixed-lint fork/${prInfo.headBranch}`)
+  exec('git', ['fetch', 'fork', prInfo.headBranch, '--depth=1'])
+  exec('git', ['checkout', '-b', 'bot-fixed-lint', `fork/${prInfo.headBranch}`])
   try {
-    exec(installCommand)
+    console.log('> ', installCommand)
+    if (!github.mock) cp.execSync(installCommand, { stdio: 'inherit' })
   } catch (e) {
     await github.comment(ctx.issue.number, `Sorry, I wasn't able to use the <code>${installCommand}</code> command to install the project because of an error.`)
     return false
@@ -45,16 +41,16 @@ async function fixlint (ctx, args, argStr) {
 
   function push () {
     if (!prInfo.canMaintainerModify) throw new Error('Cannot push to PR as the author does not allow maintainers to modify it.')
-    exec('git add --all')
-    exec('git config user.name "github-actions[bot]"')
-    exec('git config user.email "41898282+github-actions[bot]@users.noreply.github.com"')
+    exec('git', ['add', '--all'])
+    exec('git', ['config', 'user.name', 'github-actions[bot]'])
+    exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
     try {
-      exec('git commit -m "Fix linting errors"')
+      exec('git', ['commit', '-m', 'Fix linting errors'])
     } catch (e) {
       console.log('(No changes to commit!)')
       return false
     }
-    exec('git push fork bot-fixed-lint:' + prInfo.headBranch)
+    exec('git', ['push', 'fork', `bot-fixed-lint:${prInfo.headBranch}`])
     return true
   }
 
