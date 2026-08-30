@@ -3,7 +3,11 @@ const cp = require('child_process')
 const fs = require('fs')
 const github = require('gh-helpers')()
 
-const exec = (cmd) => github.mock ? console.log('> ', cmd) : (console.log('> ', cmd), cp.execSync(cmd, { stdio: 'inherit' }))
+// Runs a program directly (no shell), so arguments are never interpreted by a shell
+const exec = (file, args = []) => {
+  console.log('> ', file, ...args)
+  if (!github.mock) cp.execFileSync(file, args, { stdio: 'inherit' })
+}
 
 function findFile (tryPaths) {
   const path = tryPaths.find(path => fs.existsSync(path))
