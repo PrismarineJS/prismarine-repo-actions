@@ -10,7 +10,7 @@ const commands = {
 }
 
 github.onRepoComment((/** @type {import('gh-helpers').HookOnRepoCommentPayload & { authorHasWrite?: boolean }} */ comment) => {
-  const message = comment.body
+  const message = comment.body.trim()
   comment.authorHasWrite = WRITE_ROLES.includes(comment.role)
   console.log('onRepoComment', message.startsWith('/'), comment.authorHasWrite, comment)
   if (message.startsWith('/') && comment.authorHasWrite) {

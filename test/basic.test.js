@@ -38,6 +38,25 @@ describe('commands work', () => {
     }).catch(console.error)
   })
 
+  it('/makerelease with trailing newline', (done) => {
+    process.chdir(join(__dirname, 'normal'))
+    commentCb({
+      type: 'pull',
+      role: 'COLLABORATOR',
+      body: '/makerelease\r\n',
+      username: 'superbot',
+      url: '',
+      isAuthor: true,
+      issue: {
+        author: 'superbot',
+        isMerged: true
+      }
+    }).then((res) => {
+      if (res) done()
+      else done(Error('failed'))
+    }).catch(console.error)
+  })
+
   it('/makerelease with args', (done) => {
     process.chdir(join(__dirname, 'normal'))
     commentCb({
